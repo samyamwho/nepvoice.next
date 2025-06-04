@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
-import { AudioTrackInfo } from '../../context/AudioContext';
+import { AudioTrackInfo } from '@/components/context/AudioContext';
 
 interface GlobalplayerProps {
     trackInfo?: AudioTrackInfo | null;

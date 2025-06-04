@@ -7,7 +7,7 @@ import Sidebar from "@/components/shared/Sidebar";
 import Globalplayer from "@/components/shared/Globalplayer";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { useAudio } from "@/context/AudioContext";
+import { useAudio } from "@/components/context/AudioContext";
 import TTSDashboard from "./TTSDashboard";
 
 // Define interfaces for our data structures
