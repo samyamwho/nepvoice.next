@@ -1,103 +1,123 @@
-import Image from "next/image";
+'use client';
+
+import React, { useEffect, useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import Image from 'next/image';
+import Navbar from '@/components/shared/Navbar';
+import Footer from '@/components/shared/Footer';
+import Chatbot from '@/components/chat/Chat';
+import PricingPage from '@/components/compage/PricingPage';
+import AudioAIPlatform from '@/components/compage/Trial';
+import FeaturedAgentsSlider from '@/components/shared/FeaturedAgent';
+import TypingText from '@/components/shared/TypingText';
+
+const Divider: React.FC<{ text: string }> = ({ text }) => (
+  <div className="flex items-center justify-center">
+    <div className="h-[2px] w-1/4 bg-gray-300"></div>
+    <span className="mx-4 text-lg font-semibold text-gray-600 uppercase font-[Avenir]">{text}</span>
+    <div className="h-[2px] w-1/4 bg-gray-300"></div>
+  </div>
+);
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const router = useRouter();
+  const servicesRef = useRef<HTMLDivElement>(null);
+  const pricingRef = useRef<HTMLDivElement>(null);
+  const [isChatbotOpen, setIsChatbotOpen] = useState(false);
+  const [showChatButtonAnimation, setShowChatButtonAnimation] = useState(false);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  useEffect(() => {
+    document.documentElement.style.scrollBehavior = 'smooth';
+
+    const observer = new IntersectionObserver(
+      () => {
+        // No-op
+      },
+      { threshold: 0.2 }
+    );
+
+    if (servicesRef.current) observer.observe(servicesRef.current);
+
+    const timer = setTimeout(() => setShowChatButtonAnimation(true), 2000);
+
+    return () => {
+      document.documentElement.style.scrollBehavior = 'auto';
+      if (servicesRef.current) observer.unobserve(servicesRef.current);
+      clearTimeout(timer);
+    };
+  }, []);
+
+  const toggleChatbot = () => {
+    setIsChatbotOpen(!isChatbotOpen);
+    if (!isChatbotOpen) setShowChatButtonAnimation(false);
+  };
+
+  return (
+    <div className="bg-white">
+      <Navbar pricingRef={pricingRef as React.RefObject<HTMLDivElement>} />
+
+      <div className="dashboard-container min-h-screen relative bg-[url('/assets/pricing.png')] bg-cover">
+        <div className="h-[70px]"></div>
+
+        <div className="main-content flex flex-col md:flex-row justify-center items-center text-center mt-10 gap-x-6 px-6 md:px-16">
+          <div className="w-full flex flex-col items-center mx-10">
+            <p className="text-4xl md:text-5xl text-[#0F0F0F] mt-10 leading-tight tracking-tight">
+              Create incredibly lifelike speech with<br className="" />
+              <span className="text-6xl md:text-7xl leading-[1.2]">
+                <TypingText />
+              </span>
+            </p>
+
+            <div className="mt-6">
+              <p className="text-[#000000] text-lg md:text-2xl leading-[1.6] tracking-wide max-w-full">
+                Driven by pioneering research in Text-to-Speech, voice generation, and conversational AI.
+              </p>
+            </div>
+
+            <div className="cta mt-10">
+              <button
+                onClick={() => router.push('/signup')}
+                className="px-6 py-2 text-lg md:text-xl font-medium text-white bg-black rounded-md hover:bg-[#323e45] transition-all duration-300"
+              >
+                Get Started
+              </button>
+            </div>
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+
+        <AudioAIPlatform />
+      </div>
+
+      <div className="bg-[url('/assets/pricing.png')] bg-cover">
+        <Divider text="Discover Powerful AI Tools" />
+        <FeaturedAgentsSlider />
+
+        <Divider text="Discover Reasonable Pricing" />
+
+        <div ref={pricingRef}>
+          <PricingPage />
+        </div>
+      </div>
+
+      <button
+        className={`fixed bottom-20 right-10 opacity-90 ${showChatButtonAnimation ? 'animate-pulseButton' : ''} transition-transform hover:scale-110 duration-300`}
+        onClick={toggleChatbot}
+        aria-label="Open chat"
+      >
+        <div className="relative">
+          <Image src="/assets/msg.png" alt="Chatnow" width={56} height={56} />
+          {showChatButtonAnimation && (
+            <span className="absolute -top-1 -right-1 flex h-3 w-3">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#0088cc] opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-3 w-3 bg-green-600"></span>
+            </span>
+          )}
+        </div>
+      </button>
+
+      {isChatbotOpen && <Chatbot onClose={toggleChatbot} />}
+
+      <Footer />
     </div>
   );
 }
