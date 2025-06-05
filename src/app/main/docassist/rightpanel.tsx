@@ -51,7 +51,7 @@
     }, [setSelectedFiles, showToast]);
 
     const handleNavigateToDashboard = useCallback(() => {
-      router.push('/docdashboard');
+      router.push('/main/docassist/docdashboard');
     }, [router]);
 
     const handleClearChat = useCallback(() => {
@@ -93,7 +93,7 @@
               }`}
               onClick={() => handleTabChange('files')}
             >
-              <FolderOpen className="h-4 w-4" aria-hidden="true" />
+             
               Files
             </button>
           </div>

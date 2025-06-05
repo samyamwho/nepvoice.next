@@ -72,12 +72,12 @@ const FeatureCard = ({ title, icon, color, href, description }: FeatureCardProps
 
 // Playground feature cards data
 const playgroundFeatureCards = [
-  { title: "Text to Speech", href: "/text-to-speech", icon: <TextCursor size={24} className="text-blue-600" />, color: "bg-blue-100", description: "Convert text into natural voice." },
-  { title: "Doc Assistant", href: "/docassist", icon: <Stethoscope size={24} className="text-indigo-600" />, color: "bg-indigo-100", description: "Voice-enable your documents." },
-  { title: "Speech to Text", href: "/transcribe", icon: <FileAudio size={24} className="text-purple-600" />, color: "bg-purple-100", description: "Transcribe audio to text." },
-  { title: "Audio Book Creator", href: "/audio-book", icon: <BookHeadphones size={24} className="text-red-600" />, color: "bg-red-100", description: "Turn text into audiobooks." },
-  { title: "Youtube Transcriber", href: "/youtubetranscribe", icon: <Captions size={24} className="text-orange-600" />, color: "bg-orange-100", description: "Transcribe YouTube videos." },
-  { title: "Real-time Voice Call", href: "/audiocall", icon: <PhoneCall size={24} className="text-green-600" />, color: "bg-green-100", description: "Engage with AI voice calls." },
+  { title: "Text to Speech", href: "/main/texttospeech", icon: <TextCursor size={24} className="text-blue-600" />, color: "bg-blue-100", description: "Convert text into natural voice." },
+  { title: "Doc Assistant", href: "/main/docassist", icon: <Stethoscope size={24} className="text-indigo-600" />, color: "bg-indigo-100", description: "Voice-enable your documents." },
+  { title: "Speech to Text", href: "/main/speechtotext", icon: <FileAudio size={24} className="text-purple-600" />, color: "bg-purple-100", description: "Transcribe audio to text." },
+  { title: "Audio Book Creator", href: "/main/audio-book", icon: <BookHeadphones size={24} className="text-red-600" />, color: "bg-red-100", description: "Turn text into audiobooks." },
+  { title: "Youtube Transcriber", href: "/main/youtubetranscribe", icon: <Captions size={24} className="text-orange-600" />, color: "bg-orange-100", description: "Transcribe YouTube videos." },
+  { title: "Real-time Voice Call", href: "/main/voicecall", icon: <PhoneCall size={24} className="text-green-600" />, color: "bg-green-100", description: "Engage with AI voice calls." },
 ];
 
 export default function Dashboard() {

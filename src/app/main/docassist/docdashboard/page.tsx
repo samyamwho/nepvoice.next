@@ -7,7 +7,7 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import dynamic from 'next/dynamic';
 
 // Dynamic import for Sidebar to ensure client-side only rendering
-const Sidebar = dynamic(() => import('@/components/shared/Sidebar'), { ssr: false });
+// const Sidebar = dynamic(() => import('@/components/shared/Sidebar'), { ssr: false });
 
 // Define types for Document Log entries
 export interface DocumentLogEntryDetails {
@@ -105,7 +105,7 @@ export default function DocDashboard() {
   const [activeTab, setActiveTab] = useState('analytics');
 
   const handleBackToDocAssist = () => {
-    router.push('/docassist'); // Next.js navigation
+    router.push('/main/docassist'); // Next.js navigation
   };
 
   const tabs = [
@@ -348,7 +348,7 @@ export default function DocDashboard() {
 
   return (
     <div className="flex h-screen bg-gray-100">
-      <Sidebar />
+      {/* <Sidebar /> */}
       <div className="flex-1 overflow-auto">
         <div className="min-h-screen bg-gradient-to-br from-gray-100 to-gray-200 p-4 md:p-8">
           <header className="mb-8">

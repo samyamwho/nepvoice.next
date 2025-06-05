@@ -10,7 +10,7 @@ import 'react-toastify/dist/ReactToastify.css';
 // const Sidebar = dynamic(() => import('@/components/shared/Sidebar'), { ssr: false }); // Sidebar import removed
 const RightPanel = dynamic(() => import('./rightpanel'), { ssr: false });
 const PdfPopup = dynamic(() => import('./pdfpopup'), { ssr: false });
-const DocDashboard = dynamic(() => import('./docdashboard'), { ssr: false });
+const DocDashboard = dynamic(() => import('./docdashboard/page'), { ssr: false });
 
 export interface HighlightItem {
   page: number;

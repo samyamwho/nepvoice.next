@@ -68,7 +68,7 @@ const Sidebar = () => {
   };
 
   const handleUserMenuClick = (tab: string) => {
-    router.push(`/api?tab=${tab}`);
+    router.push(`/main/profile?tab=${tab}`);
     setUserMenuExpanded(false);
   };
 
@@ -233,7 +233,7 @@ const Sidebar = () => {
             <ul className="space-y-1 px-2">
               <li>
                 <button
-                  onClick={() => router.push('/api?tab=api-keys')}
+                  onClick={() => router.push('/main/profile?tab=api-keys')}
                   className={`flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-100 w-full text-left ${
                     collapsed && !mobileOpen ? "justify-center" : ""
                   }`}
@@ -244,7 +244,7 @@ const Sidebar = () => {
               </li>
               <li>
                 <Link
-                  href="/prices"
+                  href="/main/price"
                   className={`flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-100 ${
                     collapsed && !mobileOpen ? "justify-center" : ""
                   }`}
@@ -258,7 +258,7 @@ const Sidebar = () => {
         </nav>
 
         {/* Bottom Actions */}
-        <div className="mt-auto border-t border-gray-200">
+        <div className="mt-10 border-t border-gray-200">
           {(!collapsed || mobileOpen) && (
             <>
               <button
