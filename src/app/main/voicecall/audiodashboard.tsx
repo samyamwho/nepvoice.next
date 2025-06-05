@@ -1,7 +1,6 @@
 "use client";
 
-// AudioDashboard.tsx
-import React, { useState, useCallback, useEffect } from 'react'; 
+import React, { useState, useCallback, useEffect } from 'react';
 import { Phone, Clock, Activity, X, LayoutDashboard, Download, MessageSquare } from 'lucide-react';
 import CallDetails from "./calldetails";
 import Flowchart, { FlowNode, FlowEdge, NodeData } from './flowchart/FlowChart';
@@ -88,21 +87,32 @@ export default function AudioDashboard() {
 
   useEffect(() => {
     synchronizeIdCounterWithNodes(initialNodesRaw);
-  }, []); // Run once on mount
+  }, []);
 
   const onConnect = useCallback(
     (params: Connection) => {
       const newEdgeId = `edge_${params.source}_${params.target}_${Date.now()}`;
-      setEdges((eds) => addEdge({ ...params, id: newEdgeId, markerEnd: { type: MarkerType.ArrowClosed } } as FlowEdge, eds));
+      const newEdge: FlowEdge = {
+        ...params,
+        id: newEdgeId,
+        markerEnd: { type: MarkerType.ArrowClosed },
+        data: { linkInfo: '' }
+      };
+      setEdges((eds) => addEdge(newEdge, eds));
     },
     [setEdges]
   );
 
   const handleImportJson = useCallback((data: { nodes: FlowNode[]; edges: FlowEdge[] }) => {
     const validNodes = data.nodes.filter(n => n.id && n.position && n.data);
-    const validEdges = data.edges.filter(e => e.id && e.source && e.target);
+    const validEdges = data.edges.filter(e => e.id && e.source && e.target)
+                              .map(edge => ({
+                                ...edge,
+                                data: edge.data ? { linkInfo: edge.data.linkInfo || '', ...edge.data } : { linkInfo: '' }
+                              }));
+
     setNodes(validNodes);
-    setEdges(validEdges);
+    setEdges(validEdges as FlowEdge[]);
     synchronizeIdCounterWithNodes(validNodes);
   }, [setNodes, setEdges]);
 
@@ -126,7 +136,7 @@ export default function AudioDashboard() {
   return (
     <div className="flex h-screen bg-gray-100">
       <div className="flex-1 overflow-auto">
-        <div className="min-h-screen bg-gradient-to-br from-gray-100 to-gray-200 p-4 md:p-8 font-custom"> {/* Ensure font-custom is defined in globals.css or Tailwind config */}
+        <div className="min-h-screen bg-gradient-to-br from-gray-100 to-gray-200 p-4 md:p-8 font-custom">
           <main className="max-w-7xl mx-auto">
             <div className="mb-6 flex justify-between items-center">
               <h1 className="text-2xl font-semibold text-gray-800">Audio Dashboard</h1>

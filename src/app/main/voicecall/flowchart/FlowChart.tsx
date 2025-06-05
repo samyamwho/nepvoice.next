@@ -1,4 +1,4 @@
-"use client"; // IMPORTANT: Add this at the very top for App Router
+"use client";
 
 import React, { useCallback, MouseEvent, useEffect, useState } from 'react';
 import ReactFlow, {
@@ -6,7 +6,7 @@ import ReactFlow, {
   Controls,
   Background,
   MiniMap,
-  // MarkerType, // Not directly used in this component, but keep if Start/End Nodes use it
+
   Node,
   Edge,
   Connection,
@@ -15,14 +15,16 @@ import ReactFlow, {
   OnNodesChange,
   OnEdgesChange,
 } from 'reactflow';
-import StartNode from './StartNode'; // Assuming StartNode.tsx is in the same directory
-import EndNode from './EndNode';   // Assuming EndNode.tsx is in the same directory
+import StartNode from './StartNode';
+import EndNode from './EndNode';
 
 export interface NodeData {
   label: string;
 }
 export type FlowNode = Node<NodeData>;
-export type FlowEdge = Edge;
+
+// MODIFICATION 1: Update FlowEdge type to include a data object with linkInfo
+export type FlowEdge = Edge<{ linkInfo?: string }>;
 
 const nodeTypes: NodeTypes = {
   start: StartNode,
@@ -56,12 +58,12 @@ const checkWouldCreateCycle = (
 
 interface FlowchartContentProps {
   nodes: FlowNode[];
-  edges: FlowEdge[];
+  edges: FlowEdge[]; // Type updated here due to the change above
   onNodesChange: OnNodesChange;
   onEdgesChange: OnEdgesChange;
   onConnect: (connection: Connection) => void;
   setNodes: (updater: FlowNode[] | ((nodes: FlowNode[]) => FlowNode[])) => void;
-  setEdges: (updater: FlowEdge[] | ((edges: FlowEdge[]) => FlowEdge[])) => void;
+  setEdges: (updater: FlowEdge[] | ((edges: FlowEdge[]) => FlowEdge[])) => void; // Type updated here
   getNodeId: () => string;
   extractIdNumber: (id: string) => number;
 }
@@ -81,6 +83,8 @@ const FlowchartContent: React.FC<FlowchartContentProps> = ({
   const [isEditorPopupOpen, setIsEditorPopupOpen] = useState<boolean>(false);
   const [editingConfig, setEditingConfig] = useState<EditingConfig | null>(null);
   const [popupInputText, setPopupInputText] = useState<string>('');
+  // MODIFICATION 2: Add state for the new linkInfo input in the popup
+  const [popupLinkInfoInput, setPopupLinkInfoInput] = useState<string>('');
 
   const { deleteElements, fitView, getNodes, getEdges: getCurrentReactFlowEdges } = useReactFlow();
 
@@ -94,7 +98,7 @@ const FlowchartContent: React.FC<FlowchartContentProps> = ({
   const isValidConnection = useCallback(
     (connection: Connection): boolean => {
       const currentNodes = getNodes();
-      const currentEdges = getCurrentReactFlowEdges();
+      const currentEdges = getCurrentReactFlowEdges(); // This will return FlowEdge[]
       const sourceNode = currentNodes.find(node => node.id === connection.source);
       const targetNode = currentNodes.find(node => node.id === connection.target);
 
@@ -102,7 +106,8 @@ const FlowchartContent: React.FC<FlowchartContentProps> = ({
       if (connection.source === connection.target) return false;
       if (sourceNode.type === 'end') return false;
       if (targetNode.type === 'start') return false;
-      if (checkWouldCreateCycle(connection.source!, connection.target!, currentEdges)) {
+      // Pass currentEdges which is FlowEdge[] to checkWouldCreateCycle
+      if (checkWouldCreateCycle(connection.source!, connection.target!, currentEdges as FlowEdge[])) {
          console.warn("Connection would create a cycle.");
          return false;
       }
@@ -130,7 +135,16 @@ const FlowchartContent: React.FC<FlowchartContentProps> = ({
 
   const openEditorPopup = useCallback((type: 'node' | 'edge', element: FlowNode | FlowEdge) => {
     setEditingConfig({ type, element });
-    setPopupInputText(type === 'node' ? (element as FlowNode).data.label : (typeof (element as FlowEdge).label === 'string' ? (element as FlowEdge).label as string : ''));
+    if (type === 'node') {
+      setPopupInputText((element as FlowNode).data.label);
+      // MODIFICATION 3a: Clear linkInfo input if opening for a node
+      setPopupLinkInfoInput('');
+    } else { // type === 'edge'
+      const edgeElement = element as FlowEdge;
+      setPopupInputText(typeof edgeElement.label === 'string' ? edgeElement.label : '');
+      // MODIFICATION 3b: Populate linkInfo input for edges
+      setPopupLinkInfoInput(edgeElement.data?.linkInfo || '');
+    }
     setIsEditorPopupOpen(true);
   }, []);
 
@@ -146,6 +160,8 @@ const FlowchartContent: React.FC<FlowchartContentProps> = ({
     setIsEditorPopupOpen(false);
     setEditingConfig(null);
     setPopupInputText('');
+    // MODIFICATION 4: Reset linkInfo input on close
+    setPopupLinkInfoInput('');
   }, []);
 
   const handleSaveEdit = useCallback(() => {
@@ -156,12 +172,13 @@ const FlowchartContent: React.FC<FlowchartContentProps> = ({
         nds.map((n) => (n.id === element.id ? { ...n, data: { ...n.data, label: popupInputText } } : n))
       );
     } else if (type === 'edge') {
+      // MODIFICATION 5: Save linkInfo for edges
       setEdges((eds) =>
-        eds.map((e) => (e.id === element.id ? { ...e, label: popupInputText } : e))
+        eds.map((e) => (e.id === element.id ? { ...e, label: popupInputText, data: { ...(e.data || {}), linkInfo: popupLinkInfoInput } } : e))
       );
     }
     closeEditorPopup();
-  }, [editingConfig, popupInputText, setNodes, setEdges, closeEditorPopup]);
+  }, [editingConfig, popupInputText, popupLinkInfoInput, setNodes, setEdges, closeEditorPopup]); // Added popupLinkInfoInput to dependencies
 
   const onNodesDelete = useCallback(
     (deletedNodes: Node[]) => {
@@ -215,7 +232,7 @@ const FlowchartContent: React.FC<FlowchartContentProps> = ({
             edges={edges}
             onNodesChange={onNodesChange}
             onEdgesChange={onEdgesChange}
-            onConnect={onConnect}
+            onConnect={onConnect} // Note: The onConnect handler in the parent component should ideally add new edges with `data: { linkInfo: '' }`
             onNodeClick={onNodeClick}
             onEdgeClick={onEdgeClick}
             onPaneClick={onPaneClick}
@@ -224,7 +241,7 @@ const FlowchartContent: React.FC<FlowchartContentProps> = ({
             nodeTypes={nodeTypes}
             isValidConnection={isValidConnection}
             deleteKeyCode={['Backspace', 'Delete']}
-            className="h-full w-full" // Tailwind handles this, ReactFlow provides a base class
+            className="h-full w-full"
             fitView
           >
             <Controls />
@@ -237,16 +254,41 @@ const FlowchartContent: React.FC<FlowchartContentProps> = ({
            <>
             <div className="fixed inset-0 backdrop-blur-sm z-40" onClick={closeEditorPopup}></div>
             <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white p-6 rounded-lg shadow-xl z-50 w-full max-w-sm sm:max-w-md">
-              <h3 className="text-lg font-medium leading-6 text-gray-900 mb-4">Edit {editingConfig.type === 'node' ? 'Node' : 'Link'} Label</h3>
-              <input
-                type="text"
-                value={popupInputText}
-                onChange={(e) => setPopupInputText(e.target.value)}
-                placeholder={`Enter ${editingConfig.type} label`}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm placeholder-gray-500 text-gray-900"
-                autoFocus
-                onKeyDown={(e) => { if (e.key === 'Enter') handleSaveEdit(); if (e.key === 'Escape') closeEditorPopup(); }}
-              />
+              <h3 className="text-lg font-medium leading-6 text-gray-900 mb-4">Edit {editingConfig.type === 'node' ? 'Node' : 'Link'}</h3>
+              <div>
+                <label htmlFor="popupLabelInput" className="block text-sm font-medium text-gray-700 mb-1">
+                  Label
+                </label>
+                <input
+                  id="popupLabelInput"
+                  type="text"
+                  value={popupInputText}
+                  onChange={(e) => setPopupInputText(e.target.value)}
+                  placeholder={`Enter ${editingConfig.type} label`}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm placeholder-gray-500 text-gray-900"
+                  autoFocus
+                  onKeyDown={(e) => { if (e.key === 'Enter') handleSaveEdit(); if (e.key === 'Escape') closeEditorPopup(); }}
+                />
+              </div>
+
+              {/* MODIFICATION 6: Add input field for linkInfo if editing an edge */}
+              {editingConfig.type === 'edge' && (
+                <div className="mt-4">
+                  <label htmlFor="popupLinkInfoInput" className="block text-sm font-medium text-gray-700 mb-1">
+                    Additional Information
+                  </label>
+                  <textarea
+                    id="popupLinkInfoInput"
+                    value={popupLinkInfoInput}
+                    onChange={(e) => setPopupLinkInfoInput(e.target.value)}
+                    placeholder="Enter additional information for the link"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm placeholder-gray-500 text-gray-900"
+                    rows={3}
+                    onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSaveEdit(); } if (e.key === 'Escape') closeEditorPopup(); }}
+                  />
+                </div>
+              )}
+
               <div className="mt-5 sm:mt-6 flex flex-col sm:flex-row sm:justify-end sm:space-x-3 space-y-2 sm:space-y-0">
                 <button type="button" onClick={closeEditorPopup} className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 w-full sm:w-auto">Cancel</button>
                 <button type="button" onClick={handleSaveEdit} className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 w-full sm:w-auto">Save</button>
@@ -262,12 +304,12 @@ const FlowchartContent: React.FC<FlowchartContentProps> = ({
 
 interface FlowchartProps {
   nodes: FlowNode[];
-  edges: FlowEdge[];
+  edges: FlowEdge[]; // Type updated
   onNodesChange: OnNodesChange;
   onEdgesChange: OnEdgesChange;
   onConnect: (connection: Connection) => void;
   setNodes: (updater: FlowNode[] | ((nodes: FlowNode[]) => FlowNode[])) => void;
-  setEdges: (updater: FlowEdge[] | ((edges: FlowEdge[]) => FlowEdge[])) => void;
+  setEdges: (updater: FlowEdge[] | ((edges: FlowEdge[]) => FlowEdge[])) => void; // Type updated
   getNodeId: () => string;
   extractIdNumber: (id: string) => number;
 }
