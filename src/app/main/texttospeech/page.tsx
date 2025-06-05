@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import { Download, Play, LayoutDashboard, TextCursor } from "lucide-react";
-import Sidebar from "@/components/shared/Sidebar";
+// import Sidebar from "@/components/shared/Sidebar"; // Removed Sidebar import
 import Globalplayer from "@/components/shared/Globalplayer";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -36,16 +36,16 @@ interface HistoryItem {
 }
 
 const LANGUAGES: Language[] = [
-  { 
-    code: "en", 
-    name: "English", 
-    flag: "/assets/gb.svg", 
+  {
+    code: "en",
+    name: "English",
+    flag: "/assets/gb.svg",
     language: "english"
   },
-  { 
-    code: "ne", 
-    name: "Nepali", 
-    flag: "/assets/np.png", 
+  {
+    code: "ne",
+    name: "Nepali",
+    flag: "/assets/np.png",
     language: "nepali"
   },
 ];
@@ -94,7 +94,7 @@ const SAMPLE_HISTORY: HistoryItem[] = [
 const TextToSpeech: React.FC = () => {
   // Audio context
   const { playAudio, pauseAudio, seekAudio, setVolume, isPlaying, currentTime, duration, volume, audioUrl, trackInfo } = useAudio();
-  
+
   // Component state
   const [selectedLang, setSelectedLang] = useState<string>(LANGUAGES[0].code);
   const [dropdownOpen, setDropdownOpen] = useState<boolean>(false);
@@ -145,7 +145,7 @@ const TextToSpeech: React.FC = () => {
       toast.success('Added to favorites');
     }
   };
-  
+
   const handleDownload = () => {
     if (audioBlob) {
       const url = URL.createObjectURL(audioBlob);
@@ -205,13 +205,13 @@ const TextToSpeech: React.FC = () => {
           accept: "application/json",
         },
       });
-  
+
       if (!response.ok) throw new Error("Failed to fetch audio");
-  
+
       const blob = await response.blob();
       const urlObject = URL.createObjectURL(blob);
       setAudioBlob(blob);
-  
+
       playAudio(urlObject, {
         id: Date.now().toString(),
         title: inputText.substring(0, 30) + (inputText.length > 30 ? '...' : ''),
@@ -253,7 +253,7 @@ const TextToSpeech: React.FC = () => {
       setCharCount(item.text.length);
       setWordCount(item.text.trim().split(/\s+/).filter(Boolean).length);
       setTotalTime(calculateTotalTime(item.text));
-      
+
       await fetchAndPlayTTS();
       toast.success('Playing audio from history');
     } catch (error) {
@@ -268,7 +268,6 @@ const TextToSpeech: React.FC = () => {
 
   return (
     <div className="relative flex flex-col md:flex-row h-screen w-full overflow-hidden bg-white">
-      <Sidebar />
       <ToastContainer
         position="top-right"
         autoClose={3000}
@@ -281,7 +280,7 @@ const TextToSpeech: React.FC = () => {
         pauseOnHover
         theme="light"
         style={{ zIndex: 9999 }}
-        toastStyle={{ 
+        toastStyle={{
           minWidth: '200px',
           maxWidth: '300px',
           fontSize: '12px',
@@ -293,6 +292,7 @@ const TextToSpeech: React.FC = () => {
         }}
       />
 
+      {/* This div with flex-1 will now expand to fill the available width */}
       <div className="flex-1 flex flex-col h-full w-full overflow-y-auto p-0 md:p-0">
         <div className="w-full border-b bg-white border-gray-300 sticky top-0 z-20">
           <div className="px-4 py-3 md:px-12 md:py-4 flex items-center justify-between">

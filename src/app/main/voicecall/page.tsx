@@ -10,8 +10,7 @@ import {
 } from "lucide-react";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import Sidebar from "@/components/shared/Sidebar";
-import TypingText from "@/components/shared/TypingText"; 
+import TypingText from "@/components/shared/TypingText";
 // import AudioDashboard from "./audiodashboard";
 
 
@@ -113,8 +112,6 @@ const Audiocall: React.FC = () => {
 
   return (
     <div className="flex min-h-screen font-[Avenir] bg-gray-50 overflow-hidden">
-      <Sidebar />
-
       <ToastContainer
         position="top-right"
         autoClose={3000}

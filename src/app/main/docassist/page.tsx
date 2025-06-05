@@ -7,7 +7,7 @@ import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 // Dynamic imports for client-side only components
-const Sidebar = dynamic(() => import('@/components/shared/Sidebar'), { ssr: false });
+// const Sidebar = dynamic(() => import('@/components/shared/Sidebar'), { ssr: false }); // Sidebar import removed
 const RightPanel = dynamic(() => import('./rightpanel'), { ssr: false });
 const PdfPopup = dynamic(() => import('./pdfpopup'), { ssr: false });
 const DocDashboard = dynamic(() => import('./docdashboard'), { ssr: false });
@@ -77,7 +77,7 @@ export default function DocAssist() {
   const [pdfChatInput, setPdfChatInput] = useState('');
   const [pdfChatLoading, setPdfChatLoading] = useState(false);
   const [referencePdfs, setReferencePdfs] = useState<Message['documents']>([]);
-  
+
   // Add dashboard state
   const [showDashboard, setShowDashboard] = useState(false);
 
@@ -127,12 +127,12 @@ export default function DocAssist() {
 
   const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
     toast[type](message, {
-      position: 'top-right', 
-      autoClose: 3000, 
+      position: 'top-right',
+      autoClose: 3000,
       hideProgressBar: false,
-      closeOnClick: true, 
-      closeButton: true, 
-      pauseOnHover: true, 
+      closeOnClick: true,
+      closeButton: true,
+      pauseOnHover: true,
       draggable: true
     });
   };
@@ -168,7 +168,7 @@ export default function DocAssist() {
         let errorData;
         try {
           errorData = await response.json();
-        } catch (e) { 
+        } catch (e) {
           console.error('Failed to parse error response:', e);
         }
         throw new FetchError(`HTTP error! status: ${response.status}`, response, errorData);
@@ -233,7 +233,7 @@ export default function DocAssist() {
         let errorData;
         try {
           errorData = await response.json();
-        } catch (e) { 
+        } catch (e) {
           console.error('Failed to parse error response:', e);
         }
         throw new FetchError(`HTTP error! status: ${response.status}`, response, errorData);
@@ -360,7 +360,7 @@ export default function DocAssist() {
 
   const handlePdfChatSend = async () => {
     if (!pdfChatInput.trim()) return;
-    
+
     const currentPdfData = getCurrentPdfData();
     setPdfChatMessages(prev => [...prev, { type: 'user', content: pdfChatInput }]);
     setPdfChatLoading(true);
@@ -379,7 +379,7 @@ export default function DocAssist() {
         let errorData;
         try {
           errorData = await response.json();
-        } catch (e) { 
+        } catch (e) {
           console.error('Failed to parse error response:', e);
         }
         throw new FetchError(`HTTP error! status: ${response.status}`, response, errorData);
@@ -465,12 +465,14 @@ export default function DocAssist() {
   return (
     <>
       <div className="flex h-screen bg-white">
-        {!showPDFViewer && <Sidebar onShowDashboard={() => setShowDashboard(true)} />}
-        
+        {/* {!showPDFViewer && <Sidebar onShowDashboard={() => setShowDashboard(true)} />} Sidebar component removed */}
+
+        {/* The main content area will now take the full width if Sidebar is removed */}
         <div className={`flex-1 flex flex-col relative h-full ${showPDFViewer ? 'w-full' : ''}`}>
           <div className="flex-1 flex flex-col h-full overflow-hidden relative">
             <div className="flex flex-1 h-full overflow-hidden">
-              <div className={`flex flex-col h-full relative w-full md:flex-1 ${!showPDFViewer ? 'md:ml-7' : ''}`}>
+              {/* md:ml-7 removed as Sidebar is gone */}
+              <div className={`flex flex-col h-full relative w-full md:flex-1 ${!showPDFViewer ? '' : ''}`}>
                 <ToastContainer
                   position="top-right"
                   autoClose={3000}
@@ -518,6 +520,8 @@ export default function DocAssist() {
                           </div>
                           <p className="text-black font-medium text-base md:text-lg">How may I assist you with your documents today?</p>
                           <p className="text-gray-500 text-sm md:text-base">Upload PDFs and ask questions about their content.</p>
+                          {/* Button to open dashboard if needed, or integrate into another UI element */}
+                          {/* <button onClick={() => setShowDashboard(true)}>Show Dashboard</button> */}
                         </div>
                       </div>
                     ) : (
@@ -587,10 +591,10 @@ export default function DocAssist() {
                           <Plus size={16} className="md:w-5 md:h-5" />
                         </button>
                         <div className="flex items-center gap-1">
-                          <button 
-                            type="button" 
-                            className="p-1.5 md:p-2 rounded-full hover:bg-gray-100 transition-colors" 
-                            disabled 
+                          <button
+                            type="button"
+                            className="p-1.5 md:p-2 rounded-full hover:bg-gray-100 transition-colors"
+                            disabled
                             title="Voice input (coming soon)"
                           >
                             <Mic size={16} className="text-gray-400 md:w-5 md:h-5" />
@@ -668,9 +672,9 @@ export default function DocAssist() {
 
       {/* Dashboard Overlay */}
       {showDashboard && (
-        <DocDashboard 
-          isOpen={showDashboard} 
-          onClose={() => setShowDashboard(false)} 
+        <DocDashboard
+          isOpen={showDashboard}
+          onClose={() => setShowDashboard(false)}
         />
       )}
     </>

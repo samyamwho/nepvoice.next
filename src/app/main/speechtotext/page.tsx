@@ -3,8 +3,6 @@
 import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import { Download, Mic, FileAudio, Square, Play, Trash2, ChevronRight, BarChart2 } from "lucide-react";
-import Sidebar from "@/components/shared/Sidebar";
-// Axios removed
 import { useAudio } from '@/components/context/AudioContext';
 import Globalplayer from '@/components/shared/Globalplayer';
 import { toast } from 'react-toastify';
@@ -298,8 +296,9 @@ const AudioTranscriberPage = (): JSX.Element => {
 
   return (
     <div className="relative flex flex-col md:flex-row h-screen w-full overflow-hidden">
-      <Sidebar />
+      {/* <Sidebar /> Removed Sidebar component */}
 
+      {/* This div will now take up the full width as it's the only direct child of the flex container (or the only one with flex-1) */}
       <div className="flex-1 flex flex-col h-screen w-full overflow-y-auto bg-[url('/pricing.png')] bg-contain bg-no-repeat p-4 md:p-0">
         <header className="w-full flex justify-between items-center p-4 border-b border-gray-200 bg-white sticky top-0 z-30">
           <div className="flex items-center gap-2">
