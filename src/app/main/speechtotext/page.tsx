@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import { Download, Mic, FileAudio, Square, Play, Trash2, ChevronRight, BarChart2 } from "lucide-react";
 import { useAudio } from '@/components/context/AudioContext';
@@ -24,13 +24,13 @@ interface HistoryItem {
 }
 
 const LANGUAGES: Language[] = [
-  { code: "en", name: "English", flag: "/gb.svg", language: "english" },
-  { code: "ne", name: "Nepali", flag: "/np.png", language: "nepali" },
+  { code: "en", name: "English", flag: "/assets/gb.svg", language: "english" },
+  { code: "ne", name: "Nepali", flag: "/assets/np.png", language: "nepali" },
 ];
 
 const ASR_ENDPOINT = process.env.NEXT_PUBLIC_ASR_ENDPOINT as string;
 
-const AudioTranscriberPage = (): JSX.Element => {
+const AudioTranscriberPage = (): React.ReactElement => {
   const [selectedLang, setSelectedLang] = useState<string>(LANGUAGES[0].code);
   const [dropdownOpen, setDropdownOpen] = useState<boolean>(false);
   const [isRecording, setIsRecording] = useState<boolean>(false);
@@ -57,14 +57,14 @@ const AudioTranscriberPage = (): JSX.Element => {
     {
       id: 1,
       language: "en",
-      flag: "/gb.svg",
+      flag: "/assets/gb.svg",
       text: "Hello, this is a sample text that was converted to speech.",
       timestamp: "2 hours ago",
     },
     {
       id: 2,
       language: "ne",
-      flag: "/np.png",
+      flag: "/assets/np.png",
       text: "नमस्ते, यो नेपाली भाषामा नमुना पाठ हो।",
       timestamp: "1 day ago",
     },
@@ -296,9 +296,6 @@ const AudioTranscriberPage = (): JSX.Element => {
 
   return (
     <div className="relative flex flex-col md:flex-row h-screen w-full overflow-hidden">
-      {/* <Sidebar /> Removed Sidebar component */}
-
-      {/* This div will now take up the full width as it's the only direct child of the flex container (or the only one with flex-1) */}
       <div className="flex-1 flex flex-col h-screen w-full overflow-y-auto bg-[url('/pricing.png')] bg-contain bg-no-repeat p-4 md:p-0">
         <header className="w-full flex justify-between items-center p-4 border-b border-gray-200 bg-white sticky top-0 z-30">
           <div className="flex items-center gap-2">
@@ -361,7 +358,6 @@ const AudioTranscriberPage = (): JSX.Element => {
                       <span className="ml-2 md:ml-3 text-gray-700 text-sm md:text-base mt-2">
                         {isUploading ? `Uploading audio...` : "Processing audio..."}
                       </span>
-                      {/* Progress bar removed as basic fetch doesn't support progress easily */}
                     </div>
                   </div>
                 )}
@@ -439,9 +435,9 @@ const AudioTranscriberPage = (): JSX.Element => {
                           <Image
                             src={selectedLanguage.flag}
                             alt={selectedLanguage.name}
-                            width={24} // Base width
-                            height={24} // Base height
-                            className="w-5 h-5 md:w-6 md:h-6 rounded-full" // Tailwind classes for display size
+                            width={24} 
+                            height={24} 
+                            className="w-5 h-5 md:w-6 md:h-6 rounded-full" 
                           />
                         )}
                         <span className="font-medium text-sm md:text-base">
@@ -656,7 +652,6 @@ const AudioTranscriberPage = (): JSX.Element => {
 
                 {activeTab === "settings" && (
                   <div className="w-full space-y-4">
-                    {/* Settings content remains the same, no img tags or axios calls here */}
                      <div className="bg-white rounded-lg p-6 border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200">
                       <h3 className="text-lg font-medium text-gray-800 mb-6 flex items-center gap-2">
                         <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">

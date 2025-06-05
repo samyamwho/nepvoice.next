@@ -17,17 +17,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={inter.className}>
-        <AudioProvider>
-          <div className="flex min-h-screen">
-            <Sidebar /> 
-            <main className="flex-1">
-              {children}
-            </main>
-          </div>
-        </AudioProvider>
-      </body>
-    </html>
+    <AudioProvider>
+      <div className="flex min-h-screen">
+        <Sidebar /> 
+        <main className="flex-1">
+          {children}
+        </main>
+      </div>
+    </AudioProvider>
   );
 }
