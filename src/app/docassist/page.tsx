@@ -1,12 +1,21 @@
+'use client';
+
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, FileText,  ChevronLeft, ChevronRight,  X, Plus,  Image as  Mic } from 'lucide-react';
-import Sidebar from '@/components/shared/Sidebar'; // Adjust path as per your Next.js project structure
-import RightPanel from './rightpanel'; // Adjust path as per your Next.js project structure
-import PDFView, { HighlightItem } from './pdfviewer'; // Adjust path as per your Next.js project structure
-import axios from 'axios';
+import { Send, FileText, ChevronLeft, ChevronRight, Plus, Mic } from 'lucide-react';
+import dynamic from 'next/dynamic';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import PdfPopup from './pdfpopup'; // Adjust path as per your Next.js project structure
+
+// Dynamic imports for client-side only components
+const Sidebar = dynamic(() => import('@/components/shared/Sidebar'), { ssr: false });
+const RightPanel = dynamic(() => import('./rightpanel'), { ssr: false });
+const PdfPopup = dynamic(() => import('./pdfpopup'), { ssr: false });
+const DocDashboard = dynamic(() => import('./docdashboard'), { ssr: false });
+
+export interface HighlightItem {
+  page: number;
+  keywords: string[];
+}
 
 interface Message {
   type: 'user' | 'bot';
@@ -27,7 +36,6 @@ interface UploadedFile {
   pdf_id?: number;
 }
 
-// New interface for PDF navigation data
 interface PDFNavigationItem {
   file?: UploadedFile;
   url?: string;
@@ -37,34 +45,45 @@ interface PDFNavigationItem {
   isReference?: boolean;
 }
 
-const UPLOAD_FILE_ENDPOINT = process.env.NEXT_PUBLIC_UPLOAD_FILE_ENDPOINT;
-const CHATBOT_ENDPOINT = process.env.NEXT_PUBLIC_CHATBOT_ENDPOINT;
+class FetchError extends Error {
+  response?: Response;
+  data?: any;
 
+  constructor(message: string, response?: Response, data?: any) {
+    super(message);
+    this.name = 'FetchError';
+    this.response = response;
+    this.data = data;
+    Object.setPrototypeOf(this, FetchError.prototype);
+  }
+}
 
 export default function DocAssist() {
-  console.log('UPLOAD_FILE_ENDPOINT:', UPLOAD_FILE_ENDPOINT, 'CHATBOT_ENDPOINT:', CHATBOT_ENDPOINT);
-  
+  // Environment variables with fallbacks
+  const UPLOAD_FILE_ENDPOINT = process.env.NEXT_PUBLIC_UPLOAD_FILE_ENDPOINT || '/api/upload';
+  const CHATBOT_ENDPOINT = process.env.NEXT_PUBLIC_CHATBOT_ENDPOINT || '/api/chat';
+
   const [inputMessage, setInputMessage] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
   const [selectedFiles, setSelectedFiles] = useState<UploadedFile[]>([]);
-  const [activeTab, setActiveTab] = useState<'settings' | 'files'>('settings'); 
+  const [activeTab, setActiveTab] = useState<'settings' | 'files'>('settings');
   const [rightPanelOpen, setRightPanelOpen] = useState(false);
   const [showPDFViewer, setShowPDFViewer] = useState(false);
-  
   const [pdfNavigationList, setPdfNavigationList] = useState<PDFNavigationItem[]>([]);
   const [currentPdfIndex, setCurrentPdfIndex] = useState(0);
-  
   const [loading, setLoading] = useState(false);
+  const [filesForUpload, setFilesForUpload] = useState<File[]>([]);
+  const [pdfChatMessages, setPdfChatMessages] = useState<{ type: 'user' | 'bot', content: string }[]>([]);
+  const [pdfChatInput, setPdfChatInput] = useState('');
+  const [pdfChatLoading, setPdfChatLoading] = useState(false);
+  const [referencePdfs, setReferencePdfs] = useState<Message['documents']>([]);
+  
+  // Add dashboard state
+  const [showDashboard, setShowDashboard] = useState(false);
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
-  const [filesForUpload, setFilesForUpload] = useState<File[]>([]);
-
-  const [pdfChatMessages, setPdfChatMessages] = useState<{type: 'user' | 'bot', content: string}[]>([]);
-  const [pdfChatInput, setPdfChatInput] = useState('');
-  const [pdfChatLoading, setPdfChatLoading] = useState(false);
-
-  const [referencePdfs, setReferencePdfs] = useState<Message['documents']>([]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -88,7 +107,7 @@ export default function DocAssist() {
         setReferencePdfs(prev => {
           const existingIds = new Set((prev ?? []).map(doc => doc.pdf_id));
           const newDocs = (lastMsg.documents ?? []).filter(doc => !existingIds.has(doc.pdf_id));
-          return [...(prev ?? []), ...(newDocs ?? []) ];
+          return [...(prev ?? []), ...(newDocs ?? [])];
         });
       }
     }
@@ -102,14 +121,19 @@ export default function DocAssist() {
     const textArea = textAreaRef.current;
     if (!textArea) return;
     textArea.style.height = 'auto';
-    const newHeight = Math.min(textArea.scrollHeight, 120); 
+    const newHeight = Math.min(textArea.scrollHeight, 120);
     textArea.style.height = `${newHeight}px`;
   };
 
   const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
     toast[type](message, {
-      position: 'top-right', autoClose: 3000, hideProgressBar: false,
-      closeOnClick: true, closeButton: true, pauseOnHover: true, draggable: true
+      position: 'top-right', 
+      autoClose: 3000, 
+      hideProgressBar: false,
+      closeOnClick: true, 
+      closeButton: true, 
+      pauseOnHover: true, 
+      draggable: true
     });
   };
 
@@ -125,39 +149,45 @@ export default function DocAssist() {
       showToast('Only PDF files are allowed. Please remove other file types.', 'error');
       return;
     }
-    
+
     setLoading(true);
     const formData = new FormData();
     filesToProcess.forEach(file => formData.append('files', file));
 
     try {
-      const response = await axios.post(
-        `${UPLOAD_FILE_ENDPOINT}`,
-        formData,
-        {
-          headers: {
-            'Accept': 'application/json'
-          },
-          withCredentials: true,
+      const response = await fetch(UPLOAD_FILE_ENDPOINT, {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'Accept': 'application/json'
+        },
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        let errorData;
+        try {
+          errorData = await response.json();
+        } catch (e) { 
+          console.error('Failed to parse error response:', e);
         }
-      );
-      
-      if (response.status === 200) {
-        const newlyUploadedFiles = filesToProcess.map((file, index) => ({
-          file: file,
-          pdf_id: response.data?.pdf_ids?.[index] || undefined
-        }));
-        
-        setSelectedFiles(prev => [...prev, ...newlyUploadedFiles]);
-        showToast(`Successfully uploaded ${filesToProcess.length} PDF${filesToProcess.length > 1 ? 's' : ''}!`, 'success');
-        setFilesForUpload([]);
-        if (fileInputRef.current) fileInputRef.current.value = '';
-      } else {
-        showToast(`Upload failed. Status: ${response.status}. Please try again.`, 'error');
+        throw new FetchError(`HTTP error! status: ${response.status}`, response, errorData);
       }
+
+      const responseData = await response.json();
+      const newlyUploadedFiles = filesToProcess.map((file, index) => ({
+        file: file,
+        pdf_id: responseData?.pdf_ids?.[index] || undefined
+      }));
+
+      setSelectedFiles(prev => [...prev, ...newlyUploadedFiles]);
+      showToast(`Successfully uploaded ${filesToProcess.length} PDF${filesToProcess.length > 1 ? 's' : ''}!`, 'success');
+      setFilesForUpload([]);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+
     } catch (error) {
       console.error('PDF upload error:', error);
-      if (axios.isAxiosError(error)) {
+      if (error instanceof FetchError) {
         if (error.response?.status === 413) {
           showToast('File size too large. Please upload smaller files.', 'error');
         } else if (error.response?.status === 415) {
@@ -166,16 +196,16 @@ export default function DocAssist() {
           showToast(`Failed to upload PDFs. ${error.message}. Please try again.`, 'error');
         }
       } else {
-        showToast('An unexpected error occurred during upload. Please try again.', 'error');
+        showToast(`An unexpected error occurred during upload. ${(error as Error).message || 'Please try again.'}`, 'error');
       }
     } finally {
       setLoading(false);
     }
   };
 
-  const  handleSend = async (e?: React.MouseEvent) => {
+  const handleSend = async (e?: React.MouseEvent) => {
     e?.preventDefault();
-    
+
     if (!inputMessage.trim()) {
       showToast('Please enter a message before sending.', 'error');
       return;
@@ -185,30 +215,42 @@ export default function DocAssist() {
     setMessages(prev => [...prev, { type: 'user', content: userMessageContent }]);
     setInputMessage('');
     setLoading(true);
-    
+
     if (textAreaRef.current) {
       textAreaRef.current.style.height = 'auto';
     }
 
     try {
-      const response = await axios.get(
+      const response = await fetch(
         `${CHATBOT_ENDPOINT}/chat?query=${encodeURIComponent(userMessageContent)}`,
         {
-          withCredentials: true,
+          method: 'GET',
+          credentials: 'include',
         }
       );
-      
+
+      if (!response.ok) {
+        let errorData;
+        try {
+          errorData = await response.json();
+        } catch (e) { 
+          console.error('Failed to parse error response:', e);
+        }
+        throw new FetchError(`HTTP error! status: ${response.status}`, response, errorData);
+      }
+
+      const responseData = await response.json();
       setMessages(prev => [
         ...prev,
         {
           type: 'bot',
-          content: response.data.response || "I couldn't find a relevant answer in the documents.",
-          documents: response.data.documents
+          content: responseData.response || "I couldn't find a relevant answer in the documents.",
+          documents: responseData.documents
         }
       ]);
     } catch (error) {
       console.error('Error sending message:', error);
-      if (axios.isAxiosError(error)) {
+      if (error instanceof FetchError) {
         if (error.response?.status === 404) {
           showToast('No relevant information found in the documents.', 'error');
         } else if (error.response?.status === 500) {
@@ -217,7 +259,7 @@ export default function DocAssist() {
           showToast(`Failed to get response. ${error.message}. Please try again.`, 'error');
         }
       } else {
-        showToast('An unexpected error occurred while sending message. Please try again.', 'error');
+        showToast(`An unexpected error occurred while sending message. ${(error as Error).message || 'Please try again.'}`, 'error');
       }
       setMessages(prev => [
         ...prev,
@@ -241,7 +283,7 @@ export default function DocAssist() {
       title: file.file.name,
       isReference: false
     }];
-    
+
     setPdfNavigationList(navigationList);
     setCurrentPdfIndex(0);
     setShowPDFViewer(true);
@@ -250,16 +292,21 @@ export default function DocAssist() {
   const handleViewPDFReference = async (pdfId: number, highlights: HighlightItem[], totalPages: number) => {
     setLoading(true);
     try {
-      const response = await axios.get(
+      const response = await fetch(
         `${CHATBOT_ENDPOINT}/pdf?pdf_id=${pdfId}`,
-        { 
-          responseType: 'blob',
-          withCredentials: true, 
+        {
+          method: 'GET',
+          credentials: 'include',
         }
       );
-      const blob = response.data;
+
+      if (!response.ok) {
+        throw new FetchError(`HTTP error! status: ${response.status}`, response);
+      }
+
+      const blob = await response.blob();
       const fileUrl = URL.createObjectURL(blob);
-      
+
       const navigationList: PDFNavigationItem[] = [{
         url: fileUrl,
         highlights: highlights,
@@ -267,7 +314,7 @@ export default function DocAssist() {
         title: `PDF #${pdfId}`,
         isReference: true
       }];
-      
+
       setPdfNavigationList(navigationList);
       setCurrentPdfIndex(0);
       setShowPDFViewer(true);
@@ -286,10 +333,10 @@ export default function DocAssist() {
       title: file.file.name,
       isReference: false
     }));
-    
-    const startingIndex = startingFile ? 
+
+    const startingIndex = startingFile ?
       selectedFiles.findIndex(f => f === startingFile) : 0;
-    
+
     setPdfNavigationList(navigationList);
     setCurrentPdfIndex(Math.max(0, startingIndex));
     setShowPDFViewer(true);
@@ -311,23 +358,40 @@ export default function DocAssist() {
     return pdfNavigationList[currentPdfIndex] || null;
   };
 
-  const otherReferencePdfs = pdfNavigationList.filter((item, idx) => idx !== currentPdfIndex && item.isReference);
-
   const handlePdfChatSend = async () => {
-    if (!pdfChatInput.trim() || !currentPdfData) return;
+    if (!pdfChatInput.trim()) return;
+    
+    const currentPdfData = getCurrentPdfData();
     setPdfChatMessages(prev => [...prev, { type: 'user', content: pdfChatInput }]);
     setPdfChatLoading(true);
-    const pdfId = currentPdfData.file?.pdf_id || null; // Use currentPdfData defined below
+    const pdfId = currentPdfData?.file?.pdf_id || null;
+
     try {
-      const response = await axios.get(
+      const response = await fetch(
         `${CHATBOT_ENDPOINT}/chat?query=${encodeURIComponent(pdfChatInput)}${pdfId ? `&pdf_id=${pdfId}` : ''}`,
-        { withCredentials: true }
+        {
+          method: 'GET',
+          credentials: 'include'
+        }
       );
+
+      if (!response.ok) {
+        let errorData;
+        try {
+          errorData = await response.json();
+        } catch (e) { 
+          console.error('Failed to parse error response:', e);
+        }
+        throw new FetchError(`HTTP error! status: ${response.status}`, response, errorData);
+      }
+
+      const responseData = await response.json();
       setPdfChatMessages(prev => [
         ...prev,
-        { type: 'bot', content: response.data.response || "No answer found for this PDF." }
+        { type: 'bot', content: responseData.response || "No answer found for this PDF." }
       ]);
     } catch (error) {
+      console.error('PDF chat error:', error);
       setPdfChatMessages(prev => [
         ...prev,
         { type: 'bot', content: "Sorry, there was an error processing your request." }
@@ -340,7 +404,7 @@ export default function DocAssist() {
 
   const PDFReferenceCard = ({ pdfRefs }: { pdfRefs?: Message['documents'] }) => {
     if (!pdfRefs || pdfRefs.length === 0) return null;
-    
+
     return (
       <div className="mt-2 p-1.5 flex flex-row flex-wrap gap-2 overflow-x-auto">
         {pdfRefs.map((doc, idx) => {
@@ -353,20 +417,19 @@ export default function DocAssist() {
             }
             return acc;
           }, [] as HighlightItem[]);
+
           return (
             <div
               key={`${doc.pdf_id}-${idx}`}
               className="flex items-center gap-1.5 min-w-[150px] border border-gray-200 rounded p-1 cursor-pointer hover:bg-gray-100"
               onClick={async () => {
                 try {
-                  console.log('Requesting PDF for pdf_id:', doc.pdf_id);
                   await handleViewPDFReference(doc.pdf_id, highlightsForDoc, doc.total_pages);
                 } catch (error) {
                   console.error('Error fetching PDF for viewing:', error);
                 }
               }}
             >
-              {/* Ensure pdf.png is in public folder (e.g. public/pdf.png) */}
               <img src="/pdf.png" alt="PDF Icon" className="w-4 h-4 object-contain" />
               <div>
                 <div className="font-medium text-[10px] text-gray-800 truncate max-w-[120px]">
@@ -382,16 +445,17 @@ export default function DocAssist() {
       </div>
     );
   };
-  
+
   const closePdfViewerModal = () => {
     setShowPDFViewer(false);
-    
+
+    // Clean up blob URLs
     pdfNavigationList.forEach(item => {
       if (item.url && item.url.startsWith('blob:')) {
         URL.revokeObjectURL(item.url);
       }
     });
-    
+
     setPdfNavigationList([]);
     setCurrentPdfIndex(0);
   };
@@ -399,191 +463,216 @@ export default function DocAssist() {
   const currentPdfData = getCurrentPdfData();
 
   return (
-    <div className="flex h-screen bg-white">
-      {!showPDFViewer && <Sidebar />}
-      <div className={`flex-1 flex flex-col relative h-full ${showPDFViewer ? 'w-full' : ''}`}>
-        <div className="flex-1 flex flex-col h-full overflow-hidden relative">
-          <div className="flex flex-1 h-full overflow-hidden">
-            <div className={`flex flex-col h-full relative w-full md:flex-1 ${!showPDFViewer ? 'md:ml-7' : ''}`}> 
-              <ToastContainer
-                position="top-right"
-                autoClose={3000}
-                hideProgressBar={false}
-                newestOnTop={true}
-                closeOnClick={true}
-                closeButton={true}
-                rtl={false}
-                pauseOnFocusLoss
-                draggable
-                pauseOnHover
-                theme="light"
-                style={{ zIndex: 9999 }}
-                toastStyle={{ 
-                  minWidth: '200px',
-                  maxWidth: '300px',
-                  fontSize: '12px',
-                  padding: '8px 12px',
-                  borderRadius: '6px',
-                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
-                  marginTop: '0.5rem',
-                  marginRight: '0.5rem'
-                }}
-              />
-              {!rightPanelOpen && (
-                <button
-                  onClick={() => setRightPanelOpen(true)}
-                  className="md:hidden fixed right-0 top-1/2 -translate-y-1/2 z-50 bg-[#172A2F] text-white px-2 py-4 rounded-l-lg shadow-lg flex items-center gap-1"
-                  aria-label="Open right panel"
-                >
-                  <ChevronLeft size={16} />
-                </button>
-              )}
+    <>
+      <div className="flex h-screen bg-white">
+        {!showPDFViewer && <Sidebar onShowDashboard={() => setShowDashboard(true)} />}
+        
+        <div className={`flex-1 flex flex-col relative h-full ${showPDFViewer ? 'w-full' : ''}`}>
+          <div className="flex-1 flex flex-col h-full overflow-hidden relative">
+            <div className="flex flex-1 h-full overflow-hidden">
+              <div className={`flex flex-col h-full relative w-full md:flex-1 ${!showPDFViewer ? 'md:ml-7' : ''}`}>
+                <ToastContainer
+                  position="top-right"
+                  autoClose={3000}
+                  hideProgressBar={false}
+                  newestOnTop={true}
+                  closeOnClick={true}
+                  closeButton={true}
+                  rtl={false}
+                  pauseOnFocusLoss
+                  draggable
+                  pauseOnHover
+                  theme="light"
+                  style={{ zIndex: 9999 }}
+                  toastStyle={{
+                    minWidth: '200px',
+                    maxWidth: '300px',
+                    fontSize: '12px',
+                    padding: '8px 12px',
+                    borderRadius: '6px',
+                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
+                    marginTop: '0.5rem',
+                    marginRight: '0.5rem'
+                  }}
+                />
 
-              <div className="flex-1 flex flex-col h-full">
-                <div className="flex-1 overflow-y-auto p-2 md:p-4 pb-20 md:pb-32">
-                  {messages.length === 0 ? (
-                    <div className="h-full flex items-center justify-center">
-                      <div className="text-center space-y-4">
-                        <div className="flex justify-center mb-4">
-                          <div className="p-3 bg-gray-50 rounded-full">
-                            <FileText className="h-8 w-8 text-gray-400" />
+                {!rightPanelOpen && !showPDFViewer && (
+                  <button
+                    onClick={() => setRightPanelOpen(true)}
+                    className="md:hidden fixed right-0 top-1/2 -translate-y-1/2 z-50 bg-[#172A2F] text-white px-2 py-4 rounded-l-lg shadow-lg flex items-center gap-1"
+                    aria-label="Open right panel"
+                  >
+                    <ChevronLeft size={16} />
+                  </button>
+                )}
+
+                <div className="flex-1 flex flex-col h-full">
+                  <div className="flex-1 overflow-y-auto p-2 md:p-4 pb-20 md:pb-32">
+                    {messages.length === 0 ? (
+                      <div className="h-full flex items-center justify-center">
+                        <div className="text-center space-y-4">
+                          <div className="flex justify-center mb-4">
+                            <div className="p-3 bg-gray-50 rounded-full">
+                              <FileText className="h-8 w-8 text-gray-400" />
+                            </div>
                           </div>
+                          <p className="text-black font-medium text-base md:text-lg">How may I assist you with your documents today?</p>
+                          <p className="text-gray-500 text-sm md:text-base">Upload PDFs and ask questions about their content.</p>
                         </div>
-                        <p className="text-black font-medium text-base md:text-lg">How may I assist you with your documents today?</p>
-                        <p className="text-gray-500 text-sm md:text-base">Upload PDFs and ask questions about their content.</p>
                       </div>
-                    </div>
-                  ) : (
-                    <div className="w-full md:w-[70%] md:max-w-4xl md:mx-auto mt-10 md:mt-12 space-y-4">
-                      {messages.map((message, index) => (
-                        <div key={index} className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}>
-                          <div
-                            className={`max-w-[85%] rounded-xl p-2 md:p-3 shadow-md ${
-                              message.type === 'user'
-                                ? 'bg-[#172A2F] text-white'
-                                : 'bg-white text-gray-800 border border-gray-200'
-                            }`}
+                    ) : (
+                      <div className="w-full md:w-[70%] md:max-w-4xl md:mx-auto mt-10 md:mt-12 space-y-4">
+                        {messages.map((message, index) => (
+                          <div key={index} className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}>
+                            <div
+                              className={`max-w-[85%] rounded-xl p-2 md:p-3 shadow-md ${
+                                message.type === 'user'
+                                  ? 'bg-[#172A2F] text-white'
+                                  : 'bg-white text-gray-800 border border-gray-200'
+                              }`}
+                            >
+                              <div className="whitespace-pre-wrap break-words">{message.content}</div>
+                              {message.documents && <PDFReferenceCard pdfRefs={message.documents} />}
+                            </div>
+                          </div>
+                        ))}
+                        {loading && messages.length > 0 && messages[messages.length - 1].type === 'user' && (
+                          <div className="flex justify-start">
+                            <div className="max-w-[85%] rounded-xl p-2 md:p-3 shadow-md bg-white text-gray-800 border border-gray-200 flex items-center gap-2">
+                              <div className="h-4 w-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
+                              <span className="text-xs text-gray-500">Bot is thinking...</span>
+                            </div>
+                          </div>
+                        )}
+                        <div ref={messagesEndRef} />
+                      </div>
+                    )}
+                  </div>
+
+                  {!showPDFViewer && (
+                    <div className="absolute bottom-2 md:bottom-6 left-1/2 transform -translate-x-1/2 w-[95%] md:w-[70%] md:max-w-4xl md:mx-auto flex flex-col gap-0.5 md:gap-2 border border-gray-200 rounded-xl shadow-xl bg-white">
+                      <div className="px-1 pt-0.5 md:pt-2 w-full min-h-[28px] md:min-h-[48px]">
+                        <textarea
+                          ref={textAreaRef}
+                          value={inputMessage}
+                          onChange={(e) => setInputMessage(e.target.value)}
+                          onKeyDown={handleKeyPress}
+                          placeholder="Ask anything about your documents..."
+                          className="w-full resize-none py-0.5 px-1.5 md:py-2 md:px-3 min-h-[20px] md:min-h-[40px] max-h-[60px] md:max-h-[100px] text-xs md:text-base text-gray-800 focus:outline-none focus:ring-0 rounded"
+                          style={{ height: 'auto' }}
+                          rows={1}
+                          disabled={loading}
+                        />
+                      </div>
+                      <div className="flex items-center justify-between w-full px-1.5 py-0.5 md:px-3 md:py-2">
+                        <input
+                          type="file"
+                          ref={fileInputRef}
+                          onChange={(e) => {
+                            const selectedInputFiles = Array.from(e.target.files || []);
+                            setFilesForUpload(selectedInputFiles);
+                            handlePdfUpload(selectedInputFiles);
+                          }}
+                          accept=".pdf"
+                          multiple
+                          className="hidden"
+                        />
+                        <button
+                          type="button"
+                          className="p-1.5 md:p-2 rounded-full bg-white border border-gray-200 hover:bg-gray-100 transition-colors text-black"
+                          title="Upload PDF(s)"
+                          onClick={() => fileInputRef.current?.click()}
+                          disabled={loading}
+                        >
+                          <Plus size={16} className="md:w-5 md:h-5" />
+                        </button>
+                        <div className="flex items-center gap-1">
+                          <button 
+                            type="button" 
+                            className="p-1.5 md:p-2 rounded-full hover:bg-gray-100 transition-colors" 
+                            disabled 
+                            title="Voice input (coming soon)"
                           >
-                            <div className="whitespace-pre-wrap break-words">{message.content}</div>
-                            {message.documents && <PDFReferenceCard pdfRefs={message.documents} />}
-                          </div>
+                            <Mic size={16} className="text-gray-400 md:w-5 md:h-5" />
+                          </button>
+                          <button
+                            type="submit"
+                            onClick={handleSend}
+                            disabled={!inputMessage.trim() || loading || selectedFiles.length === 0}
+                            className="p-1.5 md:p-2 rounded-full bg-black text-white hover:bg-gray-800 transition-colors flex items-center justify-center disabled:opacity-50"
+                            aria-label="Send message"
+                          >
+                            {loading && messages.length > 0 && messages[messages.length - 1].type === 'user' ? (
+                              <div className="h-2.5 w-2.5 md:h-3 md:w-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                            ) : (
+                              <Send size={16} className="md:w-[18px] md:h-[18px]" />
+                            )}
+                          </button>
                         </div>
-                      ))}
-                      {loading && messages.length > 0 && messages[messages.length - 1].type === 'user' && (
-                        <div className="flex justify-start">
-                          <div className="max-w-[85%] rounded-xl p-2 md:p-3 shadow-md bg-white text-gray-800 border border-gray-200 flex items-center gap-2">
-                            <div className="h-4 w-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
-                            <span className="text-xs text-gray-500">Bot is thinking...</span>
-                          </div>
-                        </div>
-                      )}
-                      <div ref={messagesEndRef} />
+                      </div>
                     </div>
                   )}
                 </div>
-
-                <div className="absolute bottom-2 md:bottom-6 left-1/2 transform -translate-x-1/2 w-[95%] md:w-[70%] md:max-w-4xl md:mx-auto flex flex-col gap-0.5 md:gap-2 border border-gray-200 rounded-xl shadow-xl bg-white">
-                  <div className="px-1 pt-0.5 md:pt-2 w-full min-h-[28px] md:min-h-[48px]">
-                    <textarea
-                      ref={textAreaRef}
-                      value={inputMessage}
-                      onChange={(e) => setInputMessage(e.target.value)}
-                      onKeyDown={handleKeyPress}
-                      placeholder="Ask anything about your documents..."
-                      className="w-full resize-none py-0.5 px-1.5 md:py-2 md:px-3 min-h-[20px] md:min-h-[40px] max-h-[60px] md:max-h-[100px] text-xs md:text-base text-gray-800 focus:outline-none focus:ring-0 rounded"
-                      style={{ height: 'auto' }}
-                      rows={1}
-                      disabled={loading}
-                    />
-                  </div>
-                  <div className="flex items-center justify-between w-full px-1.5 py-0.5 md:px-3 md:py-2">
-                    <input
-                      type="file"
-                      ref={fileInputRef}
-                      onChange={(e) => {
-                        const selectedInputFiles = Array.from(e.target.files || []);
-                        setFilesForUpload(selectedInputFiles);
-                        handlePdfUpload(selectedInputFiles);
-                      }}
-                      accept=".pdf"
-                      multiple
-                      className="hidden"
-                    />
-                    <button
-                      type="button"
-                      className="p-1.5 md:p-2 rounded-full bg-white border border-gray-200 hover:bg-gray-100 transition-colors text-black"
-                      title="Upload PDF(s)"
-                      onClick={() => fileInputRef.current?.click()}
-                      disabled={loading}
-                    >
-                      <Plus size={16} className="md:w-5 md:h-5" />
-                    </button>
-                    <div className="flex items-center gap-1">
-                      <button type="button" className="p-1.5 md:p-2 rounded-full hover:bg-gray-100 transition-colors" disabled title="Voice input (coming soon)">
-                        <Mic size={16} className="text-gray-400 md:w-5 md:h-5" />
-                      </button>
-                      <button
-                        type="submit"
-                        onClick={handleSend}
-                        disabled={!inputMessage.trim() || loading || selectedFiles.length === 0}
-                        className="p-1.5 md:p-2 rounded-full bg-black text-white hover:bg-gray-800 transition-colors flex items-center justify-center disabled:opacity-50"
-                        aria-label="Send message"
-                      >
-                        {loading && messages.length > 0 && messages[messages.length-1].type === 'user' ? ( 
-                          <div className="h-2.5 w-2.5 md:h-3 md:w-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                        ) : (
-                          <Send size={16} className="md:w-[18px] md:h-[18px]" />
-                        )}
-                      </button>
-                    </div>
-                  </div>
-                </div>
               </div>
-            </div>
 
-            <div
-              className={`fixed md:static top-0 right-0 h-full w-full sm:w-3/4 md:w-[400px] bg-white border-l border-gray-200 flex flex-col transition-transform duration-300 ease-in-out z-40
-                ${rightPanelOpen ? 'translate-x-0' : 'translate-x-full'} md:translate-x-0 md:flex`}
-            >
-              {rightPanelOpen && (
-                <button
-                  onClick={() => setRightPanelOpen(false)}
-                  className="md:hidden absolute top-1/2 -translate-y-1/2 left-1 p-2 bg-[#172A2F] text-white rounded-full shadow-lg z-50 transform -translate-x-full"
-                  aria-label="Close right panel"
+              {!showPDFViewer && (
+                <div
+                  className={`fixed md:static top-0 right-0 h-full w-full sm:w-3/4 md:w-[400px] bg-white border-l border-gray-200 flex flex-col transition-transform duration-300 ease-in-out z-40
+                    ${rightPanelOpen ? 'translate-x-0' : 'translate-x-full'} md:translate-x-0 md:flex`}
                 >
-                  <ChevronRight size={20} />
-                </button>
+                  {rightPanelOpen && (
+                    <button
+                      onClick={() => setRightPanelOpen(false)}
+                      className="md:hidden absolute top-1/2 -translate-y-1/2 left-1 p-2 bg-[#172A2F] text-white rounded-full shadow-lg z-50 transform -translate-x-full"
+                      aria-label="Close right panel"
+                    >
+                      <ChevronRight size={20} />
+                    </button>
+                  )}
+                  <RightPanel
+                    activeTab={activeTab}
+                    setActiveTab={setActiveTab}
+                    selectedFiles={selectedFiles}
+                    setSelectedFiles={setSelectedFiles}
+                    setMessages={setMessages}
+                    showToast={showToast}
+                    onViewPDF={handleViewPDF}
+                    onViewMultiplePDFs={handleViewMultiplePDFs}
+                  />
+                </div>
               )}
-              <RightPanel
-                activeTab={activeTab}
-                setActiveTab={setActiveTab}
-                selectedFiles={selectedFiles}
-                setSelectedFiles={setSelectedFiles}
-                setMessages={setMessages}
-                showToast={showToast}
-                onViewPDF={handleViewPDF}
+
+              <PdfPopup
+                show={showPDFViewer}
+                onClose={closePdfViewerModal}
+                currentPdfData={currentPdfData}
+                pdfNavigationList={pdfNavigationList}
+                currentPdfIndex={currentPdfIndex}
+                handlePreviousPdf={handlePreviousPdf}
+                handleNextPdf={handleNextPdf}
+                pdfChatMessages={pdfChatMessages}
+                pdfChatInput={pdfChatInput}
+                setPdfChatInput={setPdfChatInput}
+                handlePdfChatSend={handlePdfChatSend}
+                pdfChatLoading={pdfChatLoading}
+                referencePdfs={(referencePdfs ?? []).filter(doc =>
+                  doc.pdf_id !== currentPdfData?.file?.pdf_id &&
+                  doc.pdf_id !== parseInt(currentPdfData?.title?.replace(/\D/g, '') || '0')
+                )}
+                handleViewPDFReference={handleViewPDFReference}
               />
             </div>
-
-            <PdfPopup
-              show={showPDFViewer}
-              onClose={closePdfViewerModal}
-              currentPdfData={currentPdfData}
-              pdfNavigationList={pdfNavigationList}
-              currentPdfIndex={currentPdfIndex}
-              handlePreviousPdf={handlePreviousPdf}
-              handleNextPdf={handleNextPdf}
-              pdfChatMessages={pdfChatMessages}
-              pdfChatInput={pdfChatInput}
-              setPdfChatInput={setPdfChatInput}
-              handlePdfChatSend={handlePdfChatSend}
-              pdfChatLoading={pdfChatLoading}
-              referencePdfs={(referencePdfs ?? []).filter(doc => doc.pdf_id !== currentPdfData?.file?.pdf_id && doc.pdf_id !== parseInt(currentPdfData?.title?.replace(/\D/g, '') || '0'))}
-              handleViewPDFReference={handleViewPDFReference}
-            />
           </div>
         </div>
       </div>
-    </div>
+
+      {/* Dashboard Overlay */}
+      {showDashboard && (
+        <DocDashboard 
+          isOpen={showDashboard} 
+          onClose={() => setShowDashboard(false)} 
+        />
+      )}
+    </>
   );
 }

@@ -1,5 +1,16 @@
-import React, { useState, useRef, useEffect, useMemo } from "react"; // Added React import
-import { PDFHighlight } from "@pdf-highlight/react-pdf-highlight";
+'use client';
+
+import React, { useState, useRef, useEffect, useMemo, useCallback } from "react";
+import dynamic from 'next/dynamic';
+
+// Dynamically import PDFHighlight to avoid SSR issues
+const PDFHighlight = dynamic(
+  () => import("@pdf-highlight/react-pdf-highlight").then(mod => mod.PDFHighlight),
+  { 
+    ssr: false,
+    loading: () => <div className="flex items-center justify-center h-full">Loading...</div>
+  }
+);
 
 export type HighlightItem = {
   page: number;
@@ -40,22 +51,27 @@ const PDFView: React.FC<PDFViewProps> = ({
 
   const [currentPdfUrlInternal, setCurrentPdfUrlInternal] = useState<string | null>(null);
   const [currentTotalPages, setCurrentTotalPages] = useState<number>(DEFAULT_TOTAL_PAGES);
-
   const [scale, setScale] = useState<number>(1);
   const [activeHighlight, setActiveHighlight] = useState<number | null>(null);
+  const [isClient, setIsClient] = useState(false);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const pdfContainerRef = useRef<HTMLDivElement>(null);
   const pageRefs = useRef<Record<number, HTMLDivElement | null>>({});
   const hasScrolledToHighlight = useRef(false);
 
-  const handleZoomIn = () => {
-    setScale(prevScale => Math.min(prevScale + 0.1, 2));
-  };
+  // Ensure we're on the client side
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
-  const handleZoomOut = () => {
+  const handleZoomIn = useCallback(() => {
+    setScale(prevScale => Math.min(prevScale + 0.1, 2));
+  }, []);
+
+  const handleZoomOut = useCallback(() => {
     setScale(prevScale => Math.max(prevScale - 0.1, 0.5));
-  };
+  }, []);
 
   useEffect(() => {
     let objectUrlToRevoke: string | null = null;
@@ -64,11 +80,11 @@ const PDFView: React.FC<PDFViewProps> = ({
       const fileUrl = URL.createObjectURL(uploadedFile.file);
       setCurrentPdfUrlInternal(fileUrl);
       objectUrlToRevoke = fileUrl;
-      setCurrentTotalPages(totalPagesProp ?? DEFAULT_TOTAL_PAGES); // Use totalPagesProp if available
+      setCurrentTotalPages(totalPagesProp ?? DEFAULT_TOTAL_PAGES);
       hasScrolledToHighlight.current = false;
     } else if (externalPdfUrlProp) {
       setCurrentPdfUrlInternal(externalPdfUrlProp);
-      setCurrentTotalPages(totalPagesProp ?? DEFAULT_TOTAL_PAGES); // Use totalPagesProp if available
+      setCurrentTotalPages(totalPagesProp ?? DEFAULT_TOTAL_PAGES);
       hasScrolledToHighlight.current = false;
     } else {
       setCurrentPdfUrlInternal(null);
@@ -96,13 +112,13 @@ const PDFView: React.FC<PDFViewProps> = ({
     [groupedHighlights]
   );
 
+  // Responsive scale adjustment
   useEffect(() => {
-    if (typeof window === "undefined") return; // Ensure runs only on client
+    if (!isClient) return;
 
     const resizeObserver = new ResizeObserver((entries) => {
       if (entries[0]?.contentRect.width > 0) {
         const containerWidth = entries[0].contentRect.width;
-        // Adjust scale calculation for better fit, ensuring it doesn't get too small or too large
         const calculatedScale = Math.min(Math.max(containerWidth / 800 * 0.95, 0.5), 1.5); 
         setScale(calculatedScale);
       }
@@ -119,21 +135,20 @@ const PDFView: React.FC<PDFViewProps> = ({
       }
       resizeObserver.disconnect();
     };
-  }, []); // Empty dependency array, runs once on mount
+  }, [isClient]);
 
-  const scrollToHighlight = (pageNumber: number) => {
+  const scrollToHighlight = useCallback((pageNumber: number) => {
     setActiveHighlight(pageNumber);
 
     const pageRef = pageRefs.current[pageNumber];
     if (pageRef && pdfContainerRef.current) {
       const rect = pageRef.getBoundingClientRect();
       const containerRect = pdfContainerRef.current.getBoundingClientRect();
-      // Check if page is not fully visible
-      if (rect.top < containerRect.top || rect.bottom > containerRect.bottom + 5) { // Added a small buffer
+      if (rect.top < containerRect.top || rect.bottom > containerRect.bottom + 5) {
         pageRef.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
     }
-  };
+  }, []);
 
   useEffect(() => {
     if (
@@ -146,37 +161,44 @@ const PDFView: React.FC<PDFViewProps> = ({
           scrollToHighlight(pagesWithHighlights[0]);
           hasScrolledToHighlight.current = true;
         }
-      }, 500); // Delay to allow rendering
+      }, 500);
 
       return () => clearTimeout(timer);
     }
-  }, [currentPdfUrlInternal, pagesWithHighlights, scrollToHighlight]); // Added scrollToHighlight to deps
+  }, [currentPdfUrlInternal, pagesWithHighlights, scrollToHighlight]);
 
   useEffect(() => {
     setActiveHighlight(null);
     hasScrolledToHighlight.current = false;
-    pageRefs.current = {}; // Reset page refs
-  }, [currentPdfIndex, currentPdfUrlInternal]); // Also reset on currentPdfUrlInternal change
+    pageRefs.current = {};
+  }, [currentPdfIndex, currentPdfUrlInternal]);
+
+  // Don't render until we're on the client
+  if (!isClient) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full border-2 border-dashed border-gray-300 rounded-lg p-8 text-center w-full">
+        <p className="text-gray-500">Loading PDF viewer...</p>
+      </div>
+    );
+  }
 
   if (!currentPdfUrlInternal) {
     return (
       <div className="flex flex-col items-center justify-center h-full border-2 border-dashed border-gray-300 rounded-lg p-8 text-center w-full">
         <p className="text-gray-500">No PDF selected or URL provided.</p>
-        <p className="text-xs mt-2 text-gray-400">(Ensure pdf.worker.js is in your public folder if issues persist)</p>
+        <p className="text-xs mt-2 text-gray-400">
+          (Ensure pdf.worker.js is in your public folder if issues persist)
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col w-full h-full text-black bg-gray-50"> {/* Added bg-gray-50 to parent */}
-      {/* Header Section - Removed for cleaner integration into PdfPopup */}
-      <div
-        ref={containerRef}
-        className="flex flex-col flex-1 overflow-hidden"
-      >
+    <div className="flex flex-col w-full h-full text-black bg-gray-50">
+      <div ref={containerRef} className="flex flex-col flex-1 overflow-hidden">
         <div
           ref={pdfContainerRef}
-          className="relative bg-gray-200 rounded-lg overflow-auto flex-grow custom-scrollbar p-2" // Added padding and changed bg
+          className="relative bg-gray-200 rounded-lg overflow-auto flex-grow pdf-scrollbar p-2"
         >
           {Array.from({ length: currentTotalPages }).map((_, idx) => {
             const page = idx + 1;
@@ -184,11 +206,11 @@ const PDFView: React.FC<PDFViewProps> = ({
 
             return (
               <div
-                key={`pdf-page-wrapper-${page}-${currentPdfUrlInternal}`} // Added currentPdfUrlInternal to key for re-render on PDF change
-                className={`min-w-full relative my-2 shadow-lg ${ // Added margin and shadow
-                  activeHighlight === page ? "ring-4 ring-blue-500 rounded-md" : "" // Ring on highlight
+                key={`pdf-page-wrapper-${page}-${currentPdfUrlInternal}`}
+                className={`min-w-full relative my-2 shadow-lg ${
+                  activeHighlight === page ? "ring-4 ring-blue-500 rounded-md" : ""
                 }`}
-                ref={el => { pageRefs.current[page] = el; }}
+                ref={(el) => { pageRefs.current[page] = el; }}
                 id={`pdf-page-${page}`}
               >
                 <div className="absolute top-2 left-2 bg-black bg-opacity-60 text-white px-2 py-1 rounded text-xs z-10">
@@ -207,7 +229,7 @@ const PDFView: React.FC<PDFViewProps> = ({
 
         {/* Bottom controls bar */}
         {currentPdfUrlInternal && (
-          <div className="w-full bg-white flex items-center justify-between py-2 px-4 gap-3 border-t border-gray-200 shadow- ऊपर">
+          <div className="w-full bg-white flex items-center justify-between py-2 px-4 gap-3 border-t border-gray-200">
             {/* Highlights navigation */}
             {pagesWithHighlights.length > 0 && (
               <div className="flex items-center gap-2 overflow-hidden">
@@ -217,7 +239,7 @@ const PDFView: React.FC<PDFViewProps> = ({
                   </svg>
                   <span className="text-xs font-medium text-gray-700">Highlights:</span>
                 </div>
-                <div className="flex gap-1.5 overflow-x-auto" style={{ maxWidth: 'calc(100% - 200px)'}}> {/* Limit width */}
+                <div className="flex gap-1.5 overflow-x-auto" style={{ maxWidth: 'calc(100% - 200px)'}}>
                   {pagesWithHighlights.map((page) => (
                     <button
                       key={`highlight-nav-${page}`}
@@ -234,14 +256,13 @@ const PDFView: React.FC<PDFViewProps> = ({
                 </div>
               </div>
             )}
-             {pagesWithHighlights.length === 0 && <div className="flex-1"></div>} {/* Spacer if no highlights */}
-
+            {pagesWithHighlights.length === 0 && <div className="flex-1"></div>}
 
             {/* Zoom controls */}
             <div className="flex items-center gap-2 bg-gray-100 rounded-full px-3 py-1.5">
               <button
                 onClick={handleZoomOut}
-                className="p-1.5 hover:bg-gray-300 rounded-full transition-colors text-gray-600 hover:text-black"
+                className="p-1.5 hover:bg-gray-300 rounded-full transition-colors text-gray-600 hover:text-black disabled:opacity-50"
                 title="Zoom out"
                 disabled={scale <= 0.5}
               >
@@ -249,10 +270,12 @@ const PDFView: React.FC<PDFViewProps> = ({
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
                 </svg>
               </button>
-              <span className="text-xs font-medium text-gray-700 w-10 text-center">{Math.round(scale * 100)}%</span>
+              <span className="text-xs font-medium text-gray-700 w-10 text-center">
+                {Math.round(scale * 100)}%
+              </span>
               <button
                 onClick={handleZoomIn}
-                className="p-1.5 hover:bg-gray-300 rounded-full transition-colors text-gray-600 hover:text-black"
+                className="p-1.5 hover:bg-gray-300 rounded-full transition-colors text-gray-600 hover:text-black disabled:opacity-50"
                 title="Zoom in"
                 disabled={scale >= 2.0}
               >
@@ -264,46 +287,32 @@ const PDFView: React.FC<PDFViewProps> = ({
           </div>
         )}
       </div>
+
+      <style jsx>{`
+        .pdf-scrollbar::-webkit-scrollbar {
+          width: 8px;
+          height: 8px;
+        }
+        .pdf-scrollbar::-webkit-scrollbar-thumb {
+          background: #cbd5e1;
+          border-radius: 8px;
+          border: 2px solid transparent;
+          background-clip: padding-box;
+        }
+        .pdf-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: #94a3b8;
+        }
+        .pdf-scrollbar::-webkit-scrollbar-track {
+          background: #f1f5f9;
+          border-radius: 8px;
+        }
+        .pdf-scrollbar {
+          scrollbar-width: thin;
+          scrollbar-color: #cbd5e1 #f1f5f9;
+        }
+      `}</style>
     </div>
   );
 };
 
 export default PDFView;
-
-/* 
-  Custom creative scrollbar for PDF viewer.
-  For Next.js, it's recommended to move these styles to a global CSS file 
-  (e.g., styles/globals.css) and import it in your _app.tsx file.
-*/
-// This effect will run once on the client side.
-if (typeof window !== 'undefined') {
-  const styleId = 'custom-scrollbar-style';
-  if (!document.getElementById(styleId)) {
-    const style = document.createElement('style');
-    style.id = styleId;
-    style.innerHTML = `
-    .custom-scrollbar::-webkit-scrollbar {
-      width: 8px;
-      height: 8px;
-    }
-    .custom-scrollbar::-webkit-scrollbar-thumb {
-      background: #cbd5e1; /* Tailwind gray-300 */
-      border-radius: 8px;
-      border: 2px solid transparent; /* Creates padding around thumb */
-      background-clip: padding-box;
-    }
-    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-      background: #94a3b8; /* Tailwind gray-400 */
-    }
-    .custom-scrollbar::-webkit-scrollbar-track {
-      background: #f1f5f9; /* Tailwind gray-100 */
-      border-radius: 8px;
-    }
-    .custom-scrollbar {
-      scrollbar-width: thin;
-      scrollbar-color: #cbd5e1 #f1f5f9; /* thumb track */
-    }
-    `;
-    document.head.appendChild(style);
-  }
-}

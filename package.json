@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@pdf-highlight/react-pdf-highlight": "^1.2.4",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "framer-motion": "^12.16.0",
@@ -17,8 +18,8 @@
     "radix-ui": "^1.4.2",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "react-pdf-highlighter": "^8.0.0-rc.0",
     "react-toastify": "^11.0.5",
+    "reactflow": "^11.11.4",
     "recharts": "^2.15.3",
     "tailwind-merge": "^3.3.0"
   },

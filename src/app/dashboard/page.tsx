@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import React, { useState, useMemo } from "react";
 import {
@@ -14,7 +14,7 @@ import {
 import Link from 'next/link';
 import Image from 'next/image';
 import Sidebar from '@/components/shared/Sidebar';
-import Globalplayer from '@/components/shared/Globalplayer';
+// import Globalplayer from '@/components/shared/Globalplayer';
 
 // Language options
 const LANGUAGES = [

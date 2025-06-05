@@ -1,8 +1,13 @@
+'use client';
+
 import { useState } from 'react';
 import { ArrowLeft, BarChart2, Users, FileText, AlertTriangle, Settings, CreditCard, DollarSign, X } from 'lucide-react';
-import Sidebar from '@/components/shared/Sidebar'; // Adjust path as per your Next.js project structure
-import { useRouter } from 'next/router'; // Changed from react-router-dom
+import { useRouter } from 'next/navigation'; // Changed for Next.js 13+ app router
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer} from 'recharts';
+import dynamic from 'next/dynamic';
+
+// Dynamic import for Sidebar to ensure client-side only rendering
+const Sidebar = dynamic(() => import('@/components/shared/Sidebar'), { ssr: false });
 
 // Define types for Document Log entries
 export interface DocumentLogEntryDetails {
@@ -68,7 +73,21 @@ const mockUsageData = [
   { date: '2024-03-23', docCount: 55, queries: 140 },
 ];
 
-const StatCard: React.FC<{ title: string; value: string; icon: React.ElementType; bgColorClass?: string; textColorClass?: string }> = ({ title, value, icon: Icon, bgColorClass = 'bg-blue-500', textColorClass = 'text-white' }) => (
+interface StatCardProps {
+  title: string;
+  value: string;
+  icon: React.ElementType;
+  bgColorClass?: string;
+  textColorClass?: string;
+}
+
+const StatCard: React.FC<StatCardProps> = ({ 
+  title, 
+  value, 
+  icon: Icon, 
+  bgColorClass = 'bg-blue-500', 
+  textColorClass = 'text-white' 
+}) => (
   <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-200 flex items-center space-x-4 hover:shadow-xl transition-shadow duration-300">
     <div className={`p-3 ${bgColorClass} ${textColorClass} rounded-full`}>
       <Icon size={24} />
@@ -81,12 +100,12 @@ const StatCard: React.FC<{ title: string; value: string; icon: React.ElementType
 );
 
 export default function DocDashboard() {
-  const router = useRouter(); // Changed from useNavigate
+  const router = useRouter(); // Using Next.js 13+ router
   const [selectedDoc, setSelectedDoc] = useState<DocumentLogEntry | null>(null);
   const [activeTab, setActiveTab] = useState('analytics');
 
   const handleBackToDocAssist = () => {
-    router.push('/docassist'); // Changed from navigate
+    router.push('/docassist'); // Next.js navigation
   };
 
   const tabs = [
@@ -104,10 +123,34 @@ export default function DocDashboard() {
           <>
             {/* Stats Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-              <StatCard title="Total Documents" value={mockDocLogs.length.toString()} icon={FileText} bgColorClass="bg-indigo-100" textColorClass="text-indigo-600" />
-              <StatCard title="Active Users Today" value="345" icon={Users} bgColorClass="bg-green-100" textColorClass="text-green-600" />
-              <StatCard title="Queries Last 24h" value="12,503" icon={BarChart2} bgColorClass="bg-yellow-100" textColorClass="text-yellow-600" />
-              <StatCard title="System Alerts" value="3" icon={AlertTriangle} bgColorClass="bg-red-100" textColorClass="text-red-600" />
+              <StatCard 
+                title="Total Documents" 
+                value={mockDocLogs.length.toString()} 
+                icon={FileText} 
+                bgColorClass="bg-indigo-100" 
+                textColorClass="text-indigo-600" 
+              />
+              <StatCard 
+                title="Active Users Today" 
+                value="345" 
+                icon={Users} 
+                bgColorClass="bg-green-100" 
+                textColorClass="text-green-600" 
+              />
+              <StatCard 
+                title="Queries Last 24h" 
+                value="12,503" 
+                icon={BarChart2} 
+                bgColorClass="bg-yellow-100" 
+                textColorClass="text-yellow-600" 
+              />
+              <StatCard 
+                title="System Alerts" 
+                value="3" 
+                icon={AlertTriangle} 
+                bgColorClass="bg-red-100" 
+                textColorClass="text-red-600" 
+              />
             </div>
 
             {/* Usage Chart */}
@@ -142,7 +185,7 @@ export default function DocDashboard() {
                         borderRadius: '4px',
                         fontSize: '12px'
                       }}
-                      formatter={(value: number) => [`${value} docs`, 'Count']} // Added type for value
+                      formatter={(value: number) => [`${value} docs`, 'Count']}
                     />
                     <Area 
                       type="monotone" 
@@ -200,6 +243,65 @@ export default function DocDashboard() {
           </div>
         );
 
+      case 'credits':
+        return (
+          <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
+            <h2 className="text-xl font-semibold text-gray-800 mb-6">Credits Overview</h2>
+            <div className="space-y-6">
+              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                <div>
+                  <h3 className="font-medium text-gray-800">Available Credits</h3>
+                  <p className="text-sm text-gray-500">Remaining document processing credits</p>
+                </div>
+                <div className="text-2xl font-bold text-green-600">2,547</div>
+              </div>
+              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                <div>
+                  <h3 className="font-medium text-gray-800">Used This Month</h3>
+                  <p className="text-sm text-gray-500">Credits consumed in current billing cycle</p>
+                </div>
+                <div className="text-2xl font-bold text-blue-600">453</div>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'billing':
+        return (
+          <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
+            <h2 className="text-xl font-semibold text-gray-800 mb-6">Billing Information</h2>
+            <div className="space-y-6">
+              <div className="border-b border-gray-200 pb-4">
+                <h3 className="text-lg font-medium text-gray-800 mb-4">Current Plan</h3>
+                <div className="bg-indigo-50 p-4 rounded-lg">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="font-medium text-indigo-900">Professional Plan</h4>
+                      <p className="text-sm text-indigo-600">$29/month - Up to 5000 credits</p>
+                    </div>
+                    <button className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors">
+                      Upgrade
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div>
+                <h3 className="text-lg font-medium text-gray-800 mb-4">Billing History</h3>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <span className="text-sm text-gray-600">March 2024</span>
+                    <span className="font-medium text-gray-800">$29.00</span>
+                  </div>
+                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <span className="text-sm text-gray-600">February 2024</span>
+                    <span className="font-medium text-gray-800">$29.00</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+
       case 'settings':
         return (
           <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
@@ -213,7 +315,7 @@ export default function DocDashboard() {
                       <p className="font-medium text-gray-800">Default Document Type</p>
                       <p className="text-sm text-gray-500">Set the default document type for new uploads</p>
                     </div>
-                    <select className="border border-gray-300 rounded-md px-3 py-2 text-gray-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"> {/* Added focus style */}
+                    <select className="border border-gray-300 rounded-md px-3 py-2 text-gray-500 focus:outline-none focus:ring-1 focus:ring-indigo-500">
                       <option>PDF</option>
                       <option>DOCX</option>
                       <option>TXT</option>
@@ -236,7 +338,11 @@ export default function DocDashboard() {
         );
 
       default:
-        return null;
+        return (
+          <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
+            <h2 className="text-xl font-semibold text-gray-800">Tab content coming soon...</h2>
+          </div>
+        );
     }
   };
 
@@ -244,7 +350,7 @@ export default function DocDashboard() {
     <div className="flex h-screen bg-gray-100">
       <Sidebar />
       <div className="flex-1 overflow-auto">
-        <div className="min-h-screen bg-gradient-to-br from-gray-100 to-gray-200 p-4 md:p-8 font-custom"> {/* Ensure font-custom is defined in global styles */}
+        <div className="min-h-screen bg-gradient-to-br from-gray-100 to-gray-200 p-4 md:p-8">
           <header className="mb-8">
             <div className="max-w-7xl mx-auto flex items-center justify-between">
               <div className="flex items-center space-x-3">
@@ -252,6 +358,7 @@ export default function DocDashboard() {
                   onClick={handleBackToDocAssist}
                   className="p-2 rounded-full hover:bg-gray-300 transition-colors text-gray-700 hover:text-black"
                   title="Back to Doc Assist"
+                  aria-label="Back to Doc Assist"
                 >
                   <ArrowLeft size={24} />
                 </button>
@@ -263,16 +370,19 @@ export default function DocDashboard() {
           <main className="max-w-7xl mx-auto">
             {/* Tabs */}
             <div className="mb-8 border-b border-gray-200">
-              <nav className="flex space-x-8">
+              <nav className="flex space-x-8" role="tablist">
                 {tabs.map((tab) => (
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`flex items-center space-x-2 py-4 px-1 border-b-2 font-medium text-sm ${
+                    className={`flex items-center space-x-2 py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
                       activeTab === tab.id
                         ? 'border-indigo-500 text-indigo-600'
                         : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                     }`}
+                    role="tab"
+                    aria-selected={activeTab === tab.id}
+                    aria-label={`Switch to ${tab.label} tab`}
                   >
                     <tab.icon size={18} />
                     <span>{tab.label}</span>
@@ -282,22 +392,29 @@ export default function DocDashboard() {
             </div>
 
             {/* Tab Content */}
-            {renderTabContent()}
+            <div role="tabpanel" aria-labelledby={`tab-${activeTab}`}>
+              {renderTabContent()}
+            </div>
           </main>
         </div>
       </div>
 
-      {/* Document Details Popup */}
+      {/* Document Details Modal */}
       {selectedDoc && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black bg-opacity-50" onClick={() => setSelectedDoc(null)}></div>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+          <div 
+            className="absolute inset-0 bg-black bg-opacity-50" 
+            onClick={() => setSelectedDoc(null)}
+            aria-label="Close modal"
+          ></div>
           <div className="relative bg-white rounded-xl shadow-xl w-full max-w-2xl mx-auto overflow-hidden">
             <div className="p-6 border-b border-gray-200">
               <div className="flex justify-between items-center">
-                <h2 className="text-xl font-semibold text-gray-800">Document Details</h2>
+                <h2 id="modal-title" className="text-xl font-semibold text-gray-800">Document Details</h2>
                 <button
                   onClick={() => setSelectedDoc(null)}
-                  className="text-gray-500 hover:text-gray-700 p-1 rounded-full hover:bg-gray-100" // Added some padding and hover for better UX
+                  className="text-gray-500 hover:text-gray-700 p-1 rounded-full hover:bg-gray-100 transition-colors"
+                  aria-label="Close modal"
                 >
                   <X size={24} />
                 </button>
@@ -307,25 +424,25 @@ export default function DocDashboard() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm text-gray-500">Name</p>
-                  <p className="font-medium text-gray-800">{selectedDoc.name}</p> {/* Added text color for better readability */}
+                  <p className="font-medium text-gray-800">{selectedDoc.name}</p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">Type</p>
-                  <p className="font-medium text-gray-800">{selectedDoc.type}</p> {/* Added text color */}
+                  <p className="font-medium text-gray-800">{selectedDoc.type}</p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">Status</p>
-                  <p className="font-medium text-gray-800">{selectedDoc.status}</p> {/* Added text color */}
+                  <p className="font-medium text-gray-800">{selectedDoc.status}</p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">Size</p>
-                  <p className="font-medium text-gray-800">{selectedDoc.size}</p> {/* Added text color */}
+                  <p className="font-medium text-gray-800">{selectedDoc.size}</p>
                 </div>
               </div>
               {selectedDoc.details && (
                 <div className="mt-4">
                   <p className="text-sm text-gray-500 mb-2">Content Preview</p>
-                  <div className="bg-gray-50 p-4 rounded-lg border border-gray-200"> {/* Added border for consistency */}
+                  <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
                     <p className="text-sm text-gray-700">{selectedDoc.details.content}</p>
                   </div>
                 </div>

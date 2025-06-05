@@ -187,7 +187,7 @@ const Sidebar = () => {
               </li>
               <li>
                 <Link
-                  href="/transcribe"
+                  href="/speechtotext"
                   className={`flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-100 ${
                     collapsed && !mobileOpen ? "justify-center" : ""
                   }`}
@@ -211,7 +211,7 @@ const Sidebar = () => {
               </li>
               <li>
                 <Link
-                  href="/audiocall"
+                  href="/voicecall"
                   className={`flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-100 ${
                     collapsed && !mobileOpen ? "justify-center" : ""
                   }`}
