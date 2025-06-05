@@ -4,10 +4,10 @@
 import React, { useState, useCallback, useEffect } from 'react'; 
 import { Phone, Clock, Activity, X, LayoutDashboard, Download, MessageSquare } from 'lucide-react';
 import CallDetails from "./calldetails";
-import Flowchart, { FlowNode, FlowEdge, NodeData } from './FlowChart/FlowChart';
+import Flowchart, { FlowNode, FlowEdge, NodeData } from './flowchart/FlowChart';
 import 'reactflow/dist/style.css';
-import FlowDataExporter from './FlowChart/FlowDataExporter';
-import FlowChatComp from './FlowChart/FlowChatComp';
+import FlowDataExporter from './flowchart/FlowDataExporter';
+import FlowChatComp from './flowchart/FlowChatComp';
 
 import {
   addEdge,
@@ -206,13 +206,11 @@ export default function AudioDashboard() {
       </div>
 
       {showCallDetailsModal && selectedCall && (
-        // Assuming CallDetails component is updated to accept 'call' prop of type CallLog
-        // or that selectedCall (CallLog) is compatible with what CallDetails expects for its 'callData'
         <CallDetails call={selectedCall} onClose={handleCloseCallDetails} />
       )}
 
       {showFlowchartModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-opacity-60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-7xl h-[90vh] flex flex-col overflow-hidden">
             <div className="p-1 pl-3 border-b flex justify-between items-center bg-gray-50">
               <h3 className="text-lg font-semibold text-gray-800">Flowchart Editor</h3>

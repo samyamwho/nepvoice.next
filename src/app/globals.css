@@ -228,3 +228,47 @@ animation: fadeInChat 0.3s ease-out forwards;
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+
+.react-flow__handle {
+  width: 15px !important;
+  height: 15px !important;
+  background-color: #0c141e !important;
+  border: 2px solid white !important;
+  border-radius: 50% !important;
+  z-index: 10;
+}
+
+.react-flow__handle.connecting {
+  background-color: #8593a4 !important;
+  transform: scale(1.2);
+  animation: none !important;
+}
+
+.react-flow__handle.validconnection {
+  background-color: #10b981 !important; /* Tailwind's green-500 */
+}
+
+.react-flow__handle-top {
+  top: -10px !important;
+}
+
+.react-flow__handle-bottom {
+  bottom: -10px !important;
+}
+
+.react-flow__handle-left {
+  left: -10px !important;
+}
+
+.react-flow__handle-right {
+  right: -10px !important;
+}
+
+/* Ensure ReactFlow minimap and controls are above other elements if needed */
+.react-flow__minimap {
+  z-index: 20; /* Example z-index */
+}
+.react-flow__controls {
+  z-index: 20; /* Example z-index */
+}
