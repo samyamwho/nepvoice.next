@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-import "./globals.css";
 import { AudioProvider } from "@/components/context/AudioContext";
 import 'reactflow/dist/style.css';
+import Sidebar from "@/components/shared/Sidebar";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -20,7 +20,12 @@ export default function RootLayout({
     <html lang="en">
       <body className={inter.className}>
         <AudioProvider>
-          {children}
+          <div className="flex min-h-screen">
+            <Sidebar /> 
+            <main className="flex-1 p-4">
+              {children}
+            </main>
+          </div>
         </AudioProvider>
       </body>
     </html>

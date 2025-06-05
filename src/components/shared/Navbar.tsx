@@ -73,7 +73,7 @@ const Navbar: React.FC<NavbarProps> = ({ pricingRef }) => {
                 <div className="flex items-center gap-6">
                     <button 
                         className="bg-[#000000] text-white hover:bg-opacity-90 px-4 py-2 rounded-lg text-sm font-medium border border-white"
-                        onClick={() => router.push('/dashboard')}
+                        onClick={() => router.push('/main/dashboard')}
                     >
                         Get the App
                     </button>

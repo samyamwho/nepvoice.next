@@ -127,7 +127,7 @@ const Sidebar = () => {
             {/* Home */}
             <li>
               <Link
-                href="/dashboard"
+                href="/main/dashboard"
                 className={`flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-100 ${
                   collapsed && !mobileOpen ? "justify-center" : ""
                 }`}
@@ -165,7 +165,7 @@ const Sidebar = () => {
             <ul className="space-y-1 px-2">
               <li>
                 <Link
-                  href="/texttospeech"
+                  href="/main/texttospeech"
                   className={`flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-100 ${
                     collapsed && !mobileOpen ? "justify-center" : ""
                   }`}
@@ -176,7 +176,7 @@ const Sidebar = () => {
               </li>
               <li>
                 <Link
-                  href="/docassist"
+                  href="/main/docassist"
                   className={`flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-100 ${
                     collapsed && !mobileOpen ? "justify-center" : ""
                   }`}
@@ -187,7 +187,7 @@ const Sidebar = () => {
               </li>
               <li>
                 <Link
-                  href="/speechtotext"
+                  href="/main/speechtotext"
                   className={`flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-100 ${
                     collapsed && !mobileOpen ? "justify-center" : ""
                   }`}
@@ -198,7 +198,7 @@ const Sidebar = () => {
               </li>
               <li>
                 <Link
-                  href="/youtubetranscribe"
+                  href="/main/youtubetranscribe"
                   className={`flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-100 ${
                     collapsed && !mobileOpen ? "justify-center" : ""
                   }`}
@@ -211,7 +211,7 @@ const Sidebar = () => {
               </li>
               <li>
                 <Link
-                  href="/voicecall"
+                  href="/main/voicecall"
                   className={`flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-100 ${
                     collapsed && !mobileOpen ? "justify-center" : ""
                   }`}
