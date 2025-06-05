@@ -100,7 +100,7 @@ const CallDetails: React.FC<CallDetailsProps> = ({ onClose }) => {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       {/* Backdrop with blur */}
-      <div className="absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm" onClick={onClose}></div>
+      <div className="absolute inset-0 bg-opacity-50 backdrop-blur-sm" onClick={onClose}></div>
       
       {/* Popup content */}
       <div className="relative bg-white rounded-xl shadow-2xl w-[90%] md:w-[70%] h-[90%] md:h-[85%] mx-4 overflow-hidden flex flex-col md:flex-row">

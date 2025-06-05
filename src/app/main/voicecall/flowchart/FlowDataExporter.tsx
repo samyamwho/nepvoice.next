@@ -177,13 +177,11 @@ const FlowDataExporter: React.FC<FlowDataExporterProps> = ({ nodes, edges, onImp
       <div className="p-3 sm:p-4 flex-shrink-0 border-b border-slate-200">
         <h3 className="text-lg font-semibold text-slate-800 mb-3">Edit/Export Flow Data</h3>
         <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-          {/* Removed Refresh JSON button */}
           <button
-            onClick={handleApplyJsonChanges}
-            disabled={!jsonOutput}
-            className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50 disabled:opacity-50"
+            onClick={handleLoadExampleFlow}
+            className="px-4 py-2 text-sm font-medium text-white bg-purple-600 rounded-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50"
           >
-            Apply JSON to Flow
+            Load Example Flow
           </button>
           {jsonOutput && (
             <button
@@ -194,10 +192,11 @@ const FlowDataExporter: React.FC<FlowDataExporterProps> = ({ nodes, edges, onImp
             </button>
           )}
           <button
-            onClick={handleLoadExampleFlow}
-            className="px-4 py-2 text-sm font-medium text-white bg-purple-600 rounded-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50"
+            onClick={handleApplyJsonChanges}
+            disabled={!jsonOutput}
+            className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50 disabled:opacity-50"
           >
-            Load Example Flow
+            Apply JSON to Flow
           </button>
         </div>
       </div>
