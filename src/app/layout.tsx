@@ -3,8 +3,12 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { AudioProvider } from "@/components/context/AudioContext";
 import 'reactflow/dist/style.css';
+import { ProfileProvider } from "@/components/Auth/CurrentProfile";
 
-const inter = Inter({ subsets: ["latin"] });
+const inter = Inter({
+  subsets: ["latin"],
+  weight: ["400", "700"],
+});
 
 export const metadata: Metadata = {
   title: "NepVoice",
@@ -20,7 +24,9 @@ export default function RootLayout({
     <html lang="en">
       <body className={inter.className}>
         <AudioProvider>
-          {children}
+          <ProfileProvider>
+            {children}
+          </ProfileProvider> 
         </AudioProvider>
       </body>
     </html>

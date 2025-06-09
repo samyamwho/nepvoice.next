@@ -39,7 +39,7 @@ const LANGUAGES: Language[] = [
   {
     code: "en",
     name: "English",
-    flag: "/assets/gb.svg",
+    flag: "/assets/gb.png",
     language: "english"
   },
   {

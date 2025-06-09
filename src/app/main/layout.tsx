@@ -1,10 +1,8 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
 import { AudioProvider } from "@/components/context/AudioContext";
 import 'reactflow/dist/style.css';
 import Sidebar from "@/components/shared/Sidebar";
 
-const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "NepVoice",

@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState } from 'react';
-import { X, Play, Pause, Volume2 } from 'lucide-react';
+// Lucide icons (X, Play, Pause, Volume2) are removed as per request.
+// If you need textual representations, you'll add them directly in the JSX.
 
 interface ConversationMessage {
   agent?: {
@@ -29,14 +30,12 @@ interface CallData {
 
 interface CallDetailsProps {
   onClose: () => void;
-  // If callData were to be passed as a prop, it would be defined here:
   // callData: CallData; 
 }
 
 const CallDetails: React.FC<CallDetailsProps> = ({ onClose }) => {
   const [isPlaying, setIsPlaying] = useState(false);
 
-  // Mock data - replace with actual data later (e.g., passed as a prop or fetched)
   const callData: CallData = {
     name: "Pawan Ji",
     phone_number: "9860885443",
@@ -99,21 +98,15 @@ const CallDetails: React.FC<CallDetailsProps> = ({ onClose }) => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      {/* Backdrop with blur */}
       <div className="absolute inset-0 bg-opacity-50 backdrop-blur-sm" onClick={onClose}></div>
       
-      {/* Popup content */}
       <div className="relative bg-white rounded-xl shadow-2xl w-[90%] md:w-[70%] h-[90%] md:h-[85%] mx-4 overflow-hidden flex flex-col md:flex-row">
-        {/* Left Panel - Call Details (60%) */}
         <div className="w-full md:w-[60%] border-r border-gray-200 flex flex-col">
-          {/* Header */}
           <div className="p-4 md:p-6 border-b border-gray-200">
             <h2 className="text-lg md:text-xl font-semibold text-gray-800">Call Details</h2>
           </div>
 
-          {/* Content */}
           <div className="p-4 md:p-6 space-y-4 md:space-y-6 overflow-y-auto flex-grow">
-            {/* Call Info */}
             <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-4">
               <h3 className="text-xs md:text-sm font-medium text-gray-500 mb-4">CALL INFORMATION</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -152,13 +145,13 @@ const CallDetails: React.FC<CallDetailsProps> = ({ onClose }) => {
               </div>
             </div>
 
-            {/* Call Recording */}
             <div className="bg-white border border-gray-200 rounded-xl shadow-sm">
               <div className="p-4 border-b border-gray-200">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
                     <div className="p-2 bg-blue-50 rounded-lg">
-                      <Volume2 size={20} className="text-blue-600" />
+                      {/* Volume2 icon removed */}
+                      <span className="text-blue-600 text-sm">Rec</span>
                     </div>
                     <div>
                       <h3 className="font-medium text-gray-800 text-sm md:text-base">Call Recording</h3>
@@ -170,23 +163,15 @@ const CallDetails: React.FC<CallDetailsProps> = ({ onClose }) => {
                       className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-600 hover:text-gray-900"
                       title="Download Recording"
                     >
-                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                        <polyline points="7 10 12 15 17 10"/>
-                        <line x1="12" y1="15" x2="12" y2="3"/>
-                      </svg>
+                      {/* Download SVG removed */}
+                      <span className="text-xs">Download</span>
                     </button>
                     <button 
                       className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-600 hover:text-gray-900"
                       title="Share Recording"
                     >
-                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <circle cx="18" cy="5" r="3"/>
-                        <circle cx="6" cy="12" r="3"/>
-                        <circle cx="18" cy="19" r="3"/>
-                        <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
-                        <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
-                      </svg>
+                      {/* Share SVG removed */}
+                       <span className="text-xs">Share</span>
                     </button>
                   </div>
                 </div>
@@ -196,9 +181,10 @@ const CallDetails: React.FC<CallDetailsProps> = ({ onClose }) => {
                   <div className="flex items-center space-x-2 sm:space-x-4">
                     <button 
                       onClick={() => setIsPlaying(!isPlaying)}
-                      className="p-3 bg-blue-600 hover:bg-blue-700 rounded-full transition-colors text-white"
+                      className="p-3 bg-blue-600 hover:bg-blue-700 rounded-full transition-colors text-white text-xs"
                     >
-                      {isPlaying ? <Pause size={20} /> : <Play size={20} />}
+                      {/* Play/Pause icons removed */}
+                      {isPlaying ? "Pause" : "Play"}
                     </button>
                     <div className="flex items-center space-x-2">
                       <span className="text-xs sm:text-sm font-medium text-gray-600">00:00</span>
@@ -209,17 +195,13 @@ const CallDetails: React.FC<CallDetailsProps> = ({ onClose }) => {
                     </div>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <button className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-600 hover:text-gray-900" title="Volume">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
-                        <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
-                      </svg>
+                    <button className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-600 hover:text-gray-900 text-xs" title="Volume">
+                      {/* Volume SVG removed */}
+                      Volume
                     </button>
-                    <button className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-600 hover:text-gray-900" title="Edit Transcript (mock)">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M12 20h9"/>
-                        <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
-                      </svg>
+                    <button className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-600 hover:text-gray-900 text-xs" title="Edit Transcript (mock)">
+                      {/* Edit SVG removed */}
+                      Edit
                     </button>
                   </div>
                 </div>
@@ -232,21 +214,19 @@ const CallDetails: React.FC<CallDetailsProps> = ({ onClose }) => {
           </div>
         </div>
 
-        {/* Right Panel - Conversation (40%) */}
         <div className="w-full md:w-[40%] flex flex-col">
-          {/* Header */}
           <div className="p-4 md:p-6 border-b md:border-b-0 md:border-l border-gray-200 flex justify-between items-center">
             <h2 className="text-lg md:text-xl font-semibold text-gray-800">Conversation</h2>
             <button 
               onClick={onClose} 
-              className="p-1 hover:bg-gray-100 rounded-full transition-colors text-gray-500 hover:text-gray-700"
+              className="p-1 hover:bg-gray-100 rounded-full transition-colors text-gray-500 hover:text-gray-700 text-sm"
               title="Close"
             >
-              <X size={20} />
+              {/* X icon removed */}
+              Close
             </button>
           </div>
 
-          {/* Conversation Content */}
           <div className="flex-1 p-4 md:p-6 md:border-l border-gray-200 overflow-hidden">
             <div className="bg-gray-50 shadow-inner rounded-lg p-4 space-y-6 h-full overflow-y-auto">
               {Object.entries(callData.conversation).map(([key, message]) => (
@@ -273,11 +253,6 @@ const CallDetails: React.FC<CallDetailsProps> = ({ onClose }) => {
                         </div>
                         <div className="bg-green-50 p-3 rounded-lg rounded-tl-none shadow-sm border border-green-100">
                           <p className="text-xs sm:text-sm text-gray-800 leading-relaxed">{message.customer.speaks}</p>
-                          {/* {message.customer.audio_path && (
-                            <p className="text-xs text-gray-400 mt-1 truncate" title={message.customer.audio_path}>
-                              Audio: {message.customer.audio_path.split('/').pop()}
-                            </p>
-                          )} */}
                         </div>
                       </div>
                     </div>

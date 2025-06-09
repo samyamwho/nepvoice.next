@@ -11,7 +11,6 @@ import {
   ChevronDown,
   Bell,
   BookOpen,
-  Captions,
   PhoneCall,
   Key,
   Wallet,
@@ -196,7 +195,7 @@ const Sidebar = () => {
                   {(!collapsed || mobileOpen) && <span>Speech to Text</span>}
                 </Link>
               </li>
-              <li>
+              {/* <li>
                 <Link
                   href="/main/youtubetranscriber"
                   className={`flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-100 ${
@@ -208,7 +207,7 @@ const Sidebar = () => {
                     <span>Youtube Transcriber</span>
                   )}
                 </Link>
-              </li>
+              </li> */}
               <li>
                 <Link
                   href="/main/voicecall"

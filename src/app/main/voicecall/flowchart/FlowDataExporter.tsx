@@ -8,19 +8,17 @@ interface NodeData {
 }
 type FlowNode = Node<NodeData>;
 
-// MODIFICATION 1: Correct the FlowEdge type to include the data property
-// This should match the FlowEdge type used in your FlowChart.tsx and AudioDashboard.tsx
+// Corrected EdgeData interface and FlowEdge type to use link_info
 interface EdgeDataWithLinkInfo {
-  linkInfo?: string;
-  // You can add other properties here if your edge.data object might contain more than just linkInfo
-  [key: string]: any; // Allows for other arbitrary data
+  link_info?: string; // Standardized to link_info (snake_case)
+  [key: string]: any; // Allows for other potential properties if necessary, though we aim to minimize
 }
 type FlowEdge = Edge<EdgeDataWithLinkInfo>;
 
 
 interface FlowDataExporterProps {
   nodes: FlowNode[];
-  edges: FlowEdge[]; // Now uses the corrected FlowEdge type
+  edges: FlowEdge[]; // Uses the corrected FlowEdge type
   onImportJson: (data: { nodes: FlowNode[]; edges: FlowEdge[] }) => void;
 }
 
@@ -34,31 +32,41 @@ const FlowDataExporter: React.FC<FlowDataExporterProps> = ({ nodes, edges, onImp
         id: node.id,
         type: node.type,
         position: node.position,
-        data: node.data,
+        data: node.data, // Node data is preserved as is
         width: node.width,
         height: node.height,
         selected: node.selected,
-        // positionAbsolute: node.positionAbsolute, // Typically not needed for export/import
-        // dragging: node.dragging, // State, not usually for export/import
       })),
-      edges: edges.map(edge => ({
-        id: edge.id,
-        source: edge.source,
-        target: edge.target,
-        label: edge.label,
-        type: edge.type,
-        markerEnd: edge.markerEnd,
-        selected: edge.selected,
-        // MODIFICATION 2: Include the 'data' property for edges
-        data: edge.data,
-      })),
+      edges: edges.map(edge => {
+        // Prepare the data field for the output edge.
+        // We only want to include link_info if it's present and a string in the input edge.data.
+        const edgeDataForOutput: { link_info: string } | undefined =
+          (edge.data && typeof edge.data.link_info === 'string')
+            ? { link_info: edge.data.link_info }
+            : undefined;
+
+        return {
+          id: edge.id,
+          source: edge.source,
+          target: edge.target,
+          label: edge.label,
+          type: edge.type,
+          markerEnd: edge.markerEnd,
+          selected: edge.selected,
+          // If edgeDataForOutput is defined (i.e., valid link_info was found),
+          // include it as the 'data' property. Otherwise, the 'data' property
+          // will be omitted from the serialized edge object if link_info is not present or invalid.
+          // JSON.stringify will omit keys with 'undefined' values.
+          data: edgeDataForOutput,
+        };
+      }),
     };
     return JSON.stringify(flowData, null, 2);
   }, [nodes, edges]);
 
   useEffect(() => {
     setJsonOutput(generateCurrentFlowJson());
-    setError(null);
+    setError(null); // Clear error when flow data changes
   }, [nodes, edges, generateCurrentFlowJson]);
 
   const handleApplyJsonChanges = useCallback(() => {
@@ -70,19 +78,21 @@ const FlowDataExporter: React.FC<FlowDataExporterProps> = ({ nodes, edges, onImp
         throw new Error("Invalid JSON structure. Expected 'nodes' and 'edges' arrays.");
       }
 
-      parsedData.nodes.forEach((node: any) => {
+      // Basic validation for nodes
+      parsedData.nodes.forEach((node: any, index: number) => {
         if (typeof node.id === 'undefined' || typeof node.position === 'undefined' || typeof node.data === 'undefined') {
-          throw new Error(`Node with ID '${node.id || 'unknown'}' is missing required properties (id, position, data).`);
+          throw new Error(`Node at index ${index} (ID: '${node.id || 'unknown'}') is missing required properties (id, position, data).`);
         }
       });
-      parsedData.edges.forEach((edge: any) => {
+      // Basic validation for edges
+      parsedData.edges.forEach((edge: any, index: number) => {
         if (typeof edge.id === 'undefined' || typeof edge.source === 'undefined' || typeof edge.target === 'undefined') {
-          throw new Error(`Edge with ID '${edge.id || 'unknown'}' is missing required properties (id, source, target).`);
+          throw new Error(`Edge at index ${index} (ID: '${edge.id || 'unknown'}') is missing required properties (id, source, target).`);
         }
-        // Optional: validate edge.data if needed, e.g., ensure it's an object if present
-        // if (edge.data !== undefined && typeof edge.data !== 'object') {
-        //   throw new Error(`Edge with ID '${edge.id}' has an invalid 'data' property. Expected an object or undefined.`);
-        // }
+        // Validate edge.data if it exists and has link_info
+        if (edge.data && typeof edge.data.link_info !== 'undefined' && typeof edge.data.link_info !== 'string') {
+            throw new Error(`Edge with ID '${edge.id}' has 'data.link_info' but it's not a string.`);
+        }
       });
 
       onImportJson(parsedData as { nodes: FlowNode[]; edges: FlowEdge[] });
@@ -152,8 +162,7 @@ const FlowDataExporter: React.FC<FlowDataExporterProps> = ({ nodes, edges, onImp
         target: 'node_101',
         label: 'Start -> A',
         markerEnd: { type: MarkerType.ArrowClosed },
-        // MODIFICATION 3: Add 'data' with 'linkInfo' to example edges
-        data: { linkInfo: 'This connects Start to Step A' },
+        data: { link_info: 'This connects Start to Step A' },
       },
       {
         id: 'edge_101_103',
@@ -161,7 +170,7 @@ const FlowDataExporter: React.FC<FlowDataExporterProps> = ({ nodes, edges, onImp
         target: 'node_103',
         label: 'A -> End',
         markerEnd: { type: MarkerType.ArrowClosed },
-        data: { linkInfo: 'From Step A to End' },
+        data: { link_info: 'From Step A to End' },
       },
       {
         id: 'edge_100_102',
@@ -169,7 +178,7 @@ const FlowDataExporter: React.FC<FlowDataExporterProps> = ({ nodes, edges, onImp
         target: 'node_102',
         label: 'Start -> B',
         markerEnd: { type: MarkerType.ArrowClosed },
-        data: { linkInfo: 'Alternative path: Start to B' },
+        data: { link_info: 'Alternative path: Start to B', someOtherRandomProp: 'will_be_ignored_on_export' }, // Example of extra prop
       },
       {
         id: 'edge_102_103',
@@ -177,7 +186,15 @@ const FlowDataExporter: React.FC<FlowDataExporterProps> = ({ nodes, edges, onImp
         target: 'node_103',
         label: 'B -> End',
         markerEnd: { type: MarkerType.ArrowClosed },
-        data: { linkInfo: 'From Step B to End' },
+        // Example: data property might be missing or link_info might be missing
+      },
+      { // Example edge with non-string link_info (will be excluded from output data object)
+        id: 'edge_invalid_link_info',
+        source: 'node_101',
+        target: 'node_102',
+        label: 'Invalid -> B',
+        markerEnd: { type: MarkerType.ArrowClosed },
+        data: { link_info: 123 as any, additionalInfo: "test" }, // link_info is not a string
       },
     ];
 
@@ -225,7 +242,7 @@ const FlowDataExporter: React.FC<FlowDataExporterProps> = ({ nodes, edges, onImp
           value={jsonOutput}
           onChange={(e) => {
             setJsonOutput(e.target.value);
-            if (error) setError(null);
+            if (error) setError(null); // Clear error on manual edit
           }}
           className={`w-full flex-grow min-h-0 p-3 border rounded-md shadow-sm text-sm bg-white text-slate-800 focus:ring-indigo-500 focus:border-indigo-500 resize-none ${error ? 'border-red-500' : 'border-slate-300'}`}
           placeholder="JSON data can be edited here..."

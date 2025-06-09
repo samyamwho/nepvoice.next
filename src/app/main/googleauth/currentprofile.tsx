@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 
 const WHOAMI_ENDPOINT = process.env.NEXT_PUBLIC_WHOAMI_ENDPOINT;
 
@@ -29,48 +29,58 @@ export const ProfileProvider: React.FC<ProfileProviderProps> = ({ children }) =>
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchProfile = async () => {
+  const fetchProfile = useCallback(async () => {
+    console.log("Attempting to fetch profile...");
     setLoading(true);
     setError(null);
+    setProfile(null);
 
     if (!WHOAMI_ENDPOINT) {
-      setError("WHOAMI endpoint is not configured.");
+      const errMsg = "WHOAMI_ENDPOINT is not configured. Please check your .env.local or environment variables.";
+      console.error(errMsg);
+      setError(errMsg);
       setLoading(false);
       return;
     }
 
+    console.log(`Fetching profile from: ${WHOAMI_ENDPOINT}`);
+
     try {
       const response = await fetch(WHOAMI_ENDPOINT, {
-        credentials: 'include', 
+        credentials: 'include',
       });
+
+      console.log(`Response status: ${response.status}`);
 
       if (!response.ok) {
         let errorMessage = `Error: ${response.status} ${response.statusText}`;
         try {
             const errorData = await response.json();
+            console.error("Error response data:", errorData);
             errorMessage = errorData.message || errorData.detail || errorMessage;
         } catch (e) {
-            // If response is not JSON, use the status text
+            console.warn("Could not parse error response as JSON. Using status text.", e);
         }
         throw new Error(errorMessage);
       }
 
       const data: Profile = await response.json();
+      console.log("Profile data received:", data);
       setProfile(data);
     } catch (err: any) {
-      if (err instanceof Error) {
-        setError(err.message);
-      } else {
-        setError("An unknown error occurred");
-      }
+      const errorMessage = err instanceof Error ? err.message : "An unknown error occurred";
+      console.error("Error fetching profile:", errorMessage, err);
+      setError(errorMessage);
     } finally {
       setLoading(false);
+      console.log("Profile fetch attempt finished.");
     }
-  };
+  }, []);
 
   useEffect(() => {
+    console.log("ProfileProvider mounted. Initializing profile fetch.");
     fetchProfile();
-  }, []);
+  }, [fetchProfile]);
 
   return (
     <ProfileContext.Provider value={{ profile, loading, error, fetchProfile }}>

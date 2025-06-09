@@ -51,7 +51,7 @@ const GoogleLogoutButton: React.FC<GoogleLogoutButtonProps> = ({
       clearTimeout(timeoutId);
 
       if (response.ok) {
-        return; 
+        return;
       }
 
       const status = response.status;
@@ -84,7 +84,7 @@ const GoogleLogoutButton: React.FC<GoogleLogoutButtonProps> = ({
         await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)));
         return attemptLogout(attempt + 1);
       }
-      
+
       throw new Error(errorMessageText);
 
     } catch (error: any) {
@@ -118,7 +118,7 @@ const GoogleLogoutButton: React.FC<GoogleLogoutButtonProps> = ({
         await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)));
         return attemptLogout(attempt + 1);
       }
-      
+
       throw new Error(errorMessageText);
     }
   };
@@ -129,15 +129,15 @@ const GoogleLogoutButton: React.FC<GoogleLogoutButtonProps> = ({
 
     try {
       await attemptLogout();
-      
+
       localStorage.removeItem('user');
       sessionStorage.removeItem('user');
-      
+
       if (showSuccessMessage) {
         setShowSuccess(true);
         setTimeout(() => setShowSuccess(false), 3000);
       }
-      
+
       onLogoutSuccess?.();
     } catch (error) {
       console.error('Logout error:', error);
@@ -150,9 +150,6 @@ const GoogleLogoutButton: React.FC<GoogleLogoutButtonProps> = ({
   if (showSuccess) {
     return (
       <div className={`px-4 py-2 bg-green-600 text-white font-medium rounded-md flex items-center justify-center space-x-2 ${className.trim()}`}>
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-        </svg>
         <span>Logged out successfully</span>
       </div>
     );
@@ -165,28 +162,6 @@ const GoogleLogoutButton: React.FC<GoogleLogoutButtonProps> = ({
       className={`px-4 py-2 bg-red-600 hover:bg-red-700 disabled:bg-red-400 text-white font-medium rounded-md transition-colors duration-200 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 flex items-center justify-center space-x-2 ${className.trim()}`}
       aria-label={isLoading ? 'Logging out...' : 'Logout from Google'}
     >
-      {isLoading && (
-        <svg 
-          className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" 
-          xmlns="http://www.w3.org/2000/svg" 
-          fill="none" 
-          viewBox="0 0 24 24"
-        >
-          <circle 
-            className="opacity-25" 
-            cx="12" 
-            cy="12" 
-            r="10" 
-            stroke="currentColor" 
-            strokeWidth="4"
-          />
-          <path 
-            className="opacity-75" 
-            fill="currentColor" 
-            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-          />
-        </svg>
-      )}
       <span>{isLoading ? 'Logging out...' : children}</span>
     </button>
   );

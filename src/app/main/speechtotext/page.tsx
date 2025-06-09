@@ -24,7 +24,7 @@ interface HistoryItem {
 }
 
 const LANGUAGES: Language[] = [
-  { code: "en", name: "English", flag: "/assets/gb.svg", language: "english" },
+  { code: "en", name: "English", flag: "/assets/", language: "english" },
   { code: "ne", name: "Nepali", flag: "/assets/np.png", language: "nepali" },
 ];
 
@@ -57,7 +57,7 @@ const AudioTranscriberPage = (): React.ReactElement => {
     {
       id: 1,
       language: "en",
-      flag: "/assets/gb.svg",
+      flag: "/assets/gb.png",
       text: "Hello, this is a sample text that was converted to speech.",
       timestamp: "2 hours ago",
     },
