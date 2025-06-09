@@ -53,14 +53,14 @@ export default function Home() {
   };
 
   return (
-    <div className="bg-white">
+    <div className="bg-white w-full overflow-x-hidden">
       <Navbar pricingRef={pricingRef as React.RefObject<HTMLDivElement>} />
 
       <div className="dashboard-container min-h-screen relative bg-[url('/assets/pricing.png')] bg-cover">
         <div className="h-[70px]"></div>
 
-        <div className="main-content flex flex-col md:flex-row justify-center items-center text-center mt-10 gap-x-6 px-6 md:px-16">
-          <div className="w-full flex flex-col items-center mx-10">
+        <div className="main-content flex flex-col md:flex-row justify-center items-center text-center mt-10 gap-x-6 px-4 sm:px-6 md:px-16">
+          <div className="w-full flex flex-col items-center mx-4 sm:mx-6 md:mx-10">
             <p className="text-4xl md:text-5xl text-[#0F0F0F] mt-10 leading-tight tracking-tight">
               Create incredibly lifelike speech with<br className="" />
               <span className="text-6xl md:text-7xl leading-[1.2]">
@@ -85,27 +85,31 @@ export default function Home() {
           </div>
         </div>
 
-        <AudioAIPlatform />
+        <div className="max-w-full">
+          <AudioAIPlatform />
+        </div>
       </div>
 
       <div className="bg-[url('/assets/pricing.png')] bg-cover">
         <Divider text="Discover Powerful AI Tools" />
-        <FeaturedAgentsSlider />
+        <div className="w-full overflow-x-hidden">
+          <FeaturedAgentsSlider />
+        </div>
 
         <Divider text="Discover Reasonable Pricing" />
 
-        <div ref={pricingRef}>
+        <div ref={pricingRef} className="max-w-full">
           <PricingPage />
         </div>
       </div>
 
       <button
-        className={`fixed bottom-20 right-10 opacity-90 ${showChatButtonAnimation ? 'animate-pulseButton' : ''} transition-transform hover:scale-110 duration-300`}
+        className={`fixed bottom-16 right-4 sm:right-6 md:right-10 opacity-90 ${showChatButtonAnimation ? 'animate-pulseButton' : ''} transition-transform hover:scale-110 duration-300`}
         onClick={toggleChatbot}
         aria-label="Open chat"
       >
         <div className="relative">
-          <Image src="/assets/msg.png" alt="Chatnow" width={56} height={56} />
+          <Image src="/assets/msg.png" alt="Chatnow" width={48} height={48} />
           {showChatButtonAnimation && (
             <span className="absolute -top-1 -right-1 flex h-3 w-3">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#0088cc] opacity-75"></span>
@@ -114,8 +118,8 @@ export default function Home() {
           )}
         </div>
       </button>
-
-      {isChatbotOpen && <Chatbot onClose={toggleChatbot} />}
+{/* 
+      {isChatbotOpen && <Chatbot onClose={toggleChatbot} />} */}
 
       <Footer />
     </div>

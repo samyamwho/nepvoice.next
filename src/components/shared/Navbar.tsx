@@ -50,7 +50,7 @@ const Navbar: React.FC<NavbarProps> = ({ pricingRef }) => {
                     : 'bg-[#28464E] text-white shadow-2xl'
             }`}
         >
-            <div className="max-w-7xl mx-auto flex items-center justify-between">
+            <div className="max-w-6xl mx-auto flex items-center justify-between">
                 {/* Left: Logo */}
                 <div className="flex items-center gap-2">
                     <Link href="/">

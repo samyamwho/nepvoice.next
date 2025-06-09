@@ -1,6 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import "../../app/globals.css";
 
@@ -106,28 +105,6 @@ const FeaturedAgentsSlider: React.FC = () => {
     }
   };
 
-  const prevSlide = () => {
-    if (currentIndex > 0) {
-      setCurrentIndex(currentIndex - 1);
-      if (sliderRef.current) {
-        sliderRef.current.scrollBy({
-          left: -320,
-          behavior: 'smooth'
-        });
-      }
-    } else {
-      // Loop to the end
-      const newIndex = services.length - cardsPerView;
-      setCurrentIndex(newIndex > 0 ? newIndex : 0);
-      if (sliderRef.current) {
-        sliderRef.current.scrollTo({
-          left: sliderRef.current.scrollWidth,
-          behavior: 'smooth'
-        });
-      }
-    }
-  };
-
   const goToSlide = (index: number) => {
     setCurrentIndex(index);
     if (sliderRef.current) {
@@ -157,14 +134,6 @@ const FeaturedAgentsSlider: React.FC = () => {
       </div>
 
       <div className="relative">
-        <button
-          onClick={prevSlide}
-          className="absolute -left-15 top-1/2 transform -translate-y-1/2 z-10 bg-white rounded-full p-2 shadow-lg hover:bg-gray-100"
-          aria-label="Previous slide"
-        >
-          <ChevronLeft size={24} className="text-gray-700" />
-        </button>
-
         <div 
           ref={sliderRef}
           className="flex overflow-x-auto pb-8 scrollbar-hide"
@@ -176,14 +145,6 @@ const FeaturedAgentsSlider: React.FC = () => {
             ))}
           </div>
         </div>
-
-        <button
-          onClick={nextSlide}
-          className="absolute -right-15 top-1/2 transform -translate-y-1/2 z-10 bg-white rounded-full p-2 shadow-lg hover:bg-gray-100"
-          aria-label="Next slide"
-        >
-          <ChevronRight size={24} className="text-gray-700" />
-        </button>
       </div>
 
       {/* Navigation dots */}

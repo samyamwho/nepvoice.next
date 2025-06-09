@@ -198,7 +198,7 @@ const Sidebar = () => {
               </li>
               <li>
                 <Link
-                  href="/main/youtubetranscribe"
+                  href="/main/youtubetranscriber"
                   className={`flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-100 ${
                     collapsed && !mobileOpen ? "justify-center" : ""
                   }`}
