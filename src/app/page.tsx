@@ -76,7 +76,7 @@ export default function Home() {
 
             <div className="cta mt-10">
               <button
-                onClick={() => router.push('/signup')}
+                onClick={() => router.push('/main/googleauth')}
                 className="px-6 py-2 text-lg md:text-xl font-medium text-white bg-black rounded-md hover:bg-[#323e45] transition-all duration-300"
               >
                 Get Started
