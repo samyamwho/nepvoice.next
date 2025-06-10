@@ -1,6 +1,5 @@
 'use client';
 
-// src/context/AudioContext.tsx
 import React, { createContext, useContext, useState, useRef, useEffect, useCallback } from 'react';
 
 export interface AudioTrackInfo {
@@ -17,7 +16,7 @@ interface AudioContextType {
   currentTime: number;
   duration: number;
   volume: number;
-  audioUrl: string | null; // Original URL (http OR blob:identifier for local files)
+  audioUrl: string | null;
   trackInfo: AudioTrackInfo | null;
   isLoading: boolean;
   error: string | null;

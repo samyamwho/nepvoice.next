@@ -6,7 +6,8 @@ import { Download, Mic, FileAudio, Square, Play, Trash2, ChevronRight, BarChart2
 import { useAudio } from '@/components/context/AudioContext';
 import Globalplayer from '@/components/shared/Globalplayer';
 import { toast } from 'react-toastify';
-import SpeechDashboard from "./speechdashboard";
+// import SpeechDashboard from "./speechdashboard"; 
+
 
 interface Language {
   code: string;
@@ -24,11 +25,13 @@ interface HistoryItem {
 }
 
 const LANGUAGES: Language[] = [
-  { code: "en", name: "English", flag: "/assets/", language: "english" },
+  { code: "en", name: "English", flag: "/assets/gb.png", language: "english" },
   { code: "ne", name: "Nepali", flag: "/assets/np.png", language: "nepali" },
 ];
 
 const ASR_ENDPOINT = process.env.NEXT_PUBLIC_ASR_ENDPOINT as string;
+
+console.log("ASR Endpoint:", ASR_ENDPOINT);
 
 const AudioTranscriberPage = (): React.ReactElement => {
   const [selectedLang, setSelectedLang] = useState<string>(LANGUAGES[0].code);
@@ -101,6 +104,8 @@ const AudioTranscriberPage = (): React.ReactElement => {
         mediaRecorder.start();
         setIsRecording(true);
         setTranscriptionText("");
+        setAudioUrl(null);
+        setAudioBlob(null);
       } catch (error) {
         console.error("Error starting recording:", error);
         toast.error("Failed to access microphone. Please ensure microphone permissions are granted.");
@@ -134,6 +139,7 @@ const AudioTranscriberPage = (): React.ReactElement => {
     const file = event.target.files?.[0];
     if (file) {
       if (file.type.startsWith("audio/")) {
+        deleteRecording(); 
         const url = URL.createObjectURL(file);
         setAudioUrl(url);
         setAudioBlob(file);
@@ -150,80 +156,137 @@ const AudioTranscriberPage = (): React.ReactElement => {
       toast.error("Please record or upload audio first");
       return;
     }
-    if (!ASR_ENDPOINT) {
-      toast.error("ASR service endpoint is not configured. Please check environment variables.");
+
+    // Ensure we always use HTTPS endpoint
+    let currentAsrServiceEndpoint = ASR_ENDPOINT;
+
+    if (!currentAsrServiceEndpoint) {
+      const errorMsg = "ASR service endpoint (NEXT_PUBLIC_ASR_ENDPOINT) is not configured. Please check environment variables.";
+      toast.error(errorMsg);
+      console.error(errorMsg);
       return;
     }
 
+    // Force HTTPS if running on HTTPS page
+    if (typeof window !== "undefined" && window.location.protocol === "https:") {
+      if (currentAsrServiceEndpoint.startsWith("http://")) {
+        currentAsrServiceEndpoint = currentAsrServiceEndpoint.replace("http://", "https://");
+        console.warn(`Converted HTTP endpoint to HTTPS: ${currentAsrServiceEndpoint}`);
+      }
+    }
+
+    // Additional safety check - ensure endpoint starts with https://
+    if (!currentAsrServiceEndpoint.startsWith("https://")) {
+      currentAsrServiceEndpoint = `https://${currentAsrServiceEndpoint.replace(/^https?:\/\//, "")}`;
+    }
+
+    console.log('Using ASR endpoint:', currentAsrServiceEndpoint);
+
     setIsProcessing(true);
-    setIsUploading(true); // Indicate uploading state
+    setIsUploading(true);
 
     try {
       const formData = new FormData();
-      formData.append("audio_file", audioBlob);
+      const filename = (audioBlob instanceof File)
+        ? audioBlob.name
+        : `recording.${audioBlob.type.split('/')[1] || 'wav'}`;
 
-      const langParam = selectedLanguage?.language;
-      const endpoint = `${ASR_ENDPOINT}?lang=${langParam}`;
+      formData.append("audio_file", audioBlob, filename);
 
-      // Using AbortController for timeout
+      const langParam = selectedLanguage?.language || 'english';
+      const endpointWithParams = `${currentAsrServiceEndpoint}?lang=${langParam}`;
+
+      console.log('Making request to:', endpointWithParams);
+
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 seconds timeout
+      const timeoutId = setTimeout(() => controller.abort(), 60000);
 
-      const response = await fetch(endpoint, {
+      const response = await fetch(endpointWithParams, {
         method: 'POST',
         body: formData,
-        signal: controller.signal, // Assign abort signal for timeout
+        signal: controller.signal,
+        referrerPolicy: "unsafe-url",
+        headers: {
+          'Accept': 'application/json',
+        },
       });
 
-      clearTimeout(timeoutId); // Clear timeout if fetch completes
-      setIsUploading(false); // Finished "uploading" part
+      clearTimeout(timeoutId);
+      setIsUploading(false);
 
       if (!response.ok) {
-        // Attempt to get error message from response body
-        let errorData;
+        let errorBodyContent = "No additional error details from server.";
         try {
-          errorData = await response.json();
+          const errorText = await response.text();
+          errorBodyContent = errorText;
+          try {
+            const errorJson = JSON.parse(errorText);
+            errorBodyContent = errorJson.detail || errorJson.message || JSON.stringify(errorJson);
+          } catch (e) { /* Not JSON */ }
         } catch (e) {
-          errorData = await response.text();
+          console.error("Failed to read error response body:", e);
         }
-        console.error("Server error response:", errorData);
-        const message = errorData?.message || errorData?.detail || (typeof errorData === 'string' ? errorData : `HTTP error! status: ${response.status}`);
-        throw new Error(`Server error: ${response.status} - ${message}`);
+        console.error(`Server error response (Status ${response.status}):`, errorBodyContent);
+        throw new Error(`Server error: ${response.status} - ${errorBodyContent}`);
       }
 
-      // Determine if response is JSON or plain text
       const contentType = response.headers.get("content-type");
+      const responseText = await response.text();
       let transcription = "";
+
       if (contentType && contentType.includes("application/json")) {
-        const data = await response.json();
-        if (data && typeof data === 'object') {
-            transcription = data.text || data.transcription || '';
-        } else if (typeof data === 'string') { // Some APIs might return JSON string directly
+        try {
+          const data = JSON.parse(responseText);
+          if (data && typeof data === 'object') {
+            transcription = data.text || data.transcription || data.transcript || "";
+            if (!transcription && Object.keys(data).length > 0) {
+              console.warn("Received JSON, but no 'text', 'transcription', or 'transcript' field found. Full response:", data);
+            }
+          } else if (typeof data === 'string') {
             transcription = data;
+          } else {
+            console.warn("Received JSON, but it's not a usable object or string. Raw text:", responseText);
+            transcription = responseText;
+          }
+        } catch (e) {
+          console.error("Failed to parse JSON response. Raw text:", responseText, "Error:", e);
+          transcription = responseText;
         }
       } else {
-        transcription = await response.text();
+        transcription = responseText;
       }
 
-      setTranscriptionText(transcription);
-      toast.success("Transcription completed successfully!");
+      setTranscriptionText(transcription.trim());
+
+      if (transcription.trim()) {
+        toast.success("Transcription completed successfully!");
+      } else {
+        toast.warn("Transcription completed, but the result was empty.", { autoClose: 5000 });
+      }
 
     } catch (error: any) {
-      setIsUploading(false); // Ensure this is reset on error
+      setIsUploading(false);
       let errorMessage = "Failed to generate transcription: ";
+      
       if (error.name === 'AbortError') {
-        errorMessage += "Request timed out. The ASR service took too long to respond.";
+        errorMessage += "Request timed out.";
       } else if (error.message.includes("Failed to fetch") || error.message.includes("NetworkError")) {
-        errorMessage += "Network error. Please check your internet connection and ensure the ASR service is accessible at the configured endpoint.";
+        if (typeof window !== "undefined" && window.location.protocol === "https:" && ASR_ENDPOINT?.startsWith("http://")) {
+          errorMessage += "Mixed Content Error - Your page is HTTPS but the ASR endpoint is HTTP. Please use an HTTPS endpoint.";
+        } else {
+          errorMessage += "Network error. Please check your connection and ensure the ASR service is accessible.";
+        }
+        console.error("Network/Fetch Error Details:", error);
       } else if (error.message.startsWith("Server error:")) {
         errorMessage += error.message;
-      }
-       else {
+      } else {
         errorMessage += `${error.message || "Unknown error"}`;
+        console.error("Generic Transcription Error Details:", error);
       }
-      toast.error(errorMessage, { autoClose: 7000 });
+      
+      toast.error(errorMessage, { autoClose: 10000 });
     } finally {
-      setIsProcessing(false); // General processing state
+      setIsProcessing(false);
     }
   };
 
@@ -258,6 +321,7 @@ const AudioTranscriberPage = (): React.ReactElement => {
     if (files && files.length > 0) {
       const file = files[0];
       if (file.type.startsWith("audio/")) {
+        deleteRecording();
         const url = URL.createObjectURL(file);
         setAudioUrl(url);
         setAudioBlob(file);
@@ -314,7 +378,19 @@ const AudioTranscriberPage = (): React.ReactElement => {
         </header>
 
         {showDashboard ? (
-          <SpeechDashboard />
+          // <SpeechDashboard /> 
+          // Note: Uncomment the import at the top and ensure SpeechDashboard component exists
+          <div className="flex-1 flex items-center justify-center p-8">
+            <div className="text-center bg-gray-50 rounded-lg p-12 border-2 border-dashed border-gray-300">
+              <BarChart2 className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-xl font-semibold text-gray-600 mb-2">Speech Analytics Dashboard</h3>
+              <p className="text-gray-500">
+                Analytics dashboard will be displayed here.
+                <br />
+                <span className="text-sm">Uncomment SpeechDashboard import to enable this feature.</span>
+              </p>
+            </div>
+          </div>
         ) : (
           <div className="flex-1 flex flex-col md:flex-row w-full mt-4 md:mt-0">
             <div
@@ -355,7 +431,7 @@ const AudioTranscriberPage = (): React.ReactElement => {
                   <div className="mb-4 md:mb-6">
                     <div className="flex flex-col items-center justify-center">
                       <div className="animate-spin rounded-full h-6 w-6 md:h-8 md:w-8 border-t-2 border-b-2 border-black"></div>
-                      <span className="ml-2 md:ml-3 text-gray-700 text-sm md:text-base mt-2">
+                      <span className="ml-0 md:ml-3 text-gray-700 text-sm md:text-base mt-2">
                         {isUploading ? `Uploading audio...` : "Processing audio..."}
                       </span>
                     </div>
@@ -435,9 +511,9 @@ const AudioTranscriberPage = (): React.ReactElement => {
                           <Image
                             src={selectedLanguage.flag}
                             alt={selectedLanguage.name}
-                            width={24} 
-                            height={24} 
-                            className="w-5 h-5 md:w-6 md:h-6 rounded-full" 
+                            width={24}
+                            height={24}
+                            className="w-5 h-5 md:w-6 md:h-6 rounded-full"
                           />
                         )}
                         <span className="font-medium text-sm md:text-base">
@@ -730,7 +806,7 @@ const AudioTranscriberPage = (): React.ReactElement => {
                             value={settings.language}
                             onChange={(e) => {
                                 setSettings({ ...settings, language: e.target.value });
-                                setSelectedLang(e.target.value);
+                                setSelectedLang(e.target.value); 
                                 toast.info(`Default language set to ${LANGUAGES.find(l => l.code === e.target.value)?.name}`);
                             }}
                           >
@@ -759,13 +835,13 @@ const AudioTranscriberPage = (): React.ReactElement => {
             if (globalIsPlaying) {
               pauseAudio();
             } else {
-              playAudio(globalAudioUrl, globalTrackInfo || { title: 'Unknown Track', speaker: 'Unknown' });
+              playAudio(globalAudioUrl, globalTrackInfo || { title: 'Audio Playback', speaker: 'System' });
             }
           }
         }}
-        onVolumeChange={() => {}}
-        onForward={() => {}}
-        onBackward={() => {}}
+        onVolumeChange={() => { /* Placeholder */ }}
+        onForward={() => { /* Placeholder */ }}
+        onBackward={() => { /* Placeholder */ }}
         trackInfo={globalTrackInfo || { title: 'No track loaded', speaker: '' }}
         onSeek={(percentage: number) => {
             if (duration > 0) {

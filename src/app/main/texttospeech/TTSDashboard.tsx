@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Phone, Clock, Activity, Volume2, BarChart2, Settings, FileText, CreditCard, DollarSign, AlertCircle } from 'lucide-react'; // X removed as it's used in TTSDetailsPopup
+import { Phone, Clock, Activity, Volume2, BarChart2, Settings, FileText, CreditCard, DollarSign, AlertCircle } from 'lucide-react';
 import TTSDetailsPopup from './TTSDetailsPopup'; // Import the separated popup
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
 import { useAudio } from '@/components/context/AudioContext';
@@ -10,7 +10,7 @@ import { useAudio } from '@/components/context/AudioContext';
 export interface TTSLogEntryDetails {
   agent: string;
   transcript: string;
-  audioUrl?: string; // Optional as seen in mock data
+  audioUrl?: string;
 }
 
 export interface TTSLogEntry {
@@ -21,10 +21,9 @@ export interface TTSLogEntry {
   voice: string;
   style: number;
   speed: number;
-  details?: TTSLogEntryDetails; // Optional as seen in mock data
+  details?: TTSLogEntryDetails;
 }
 
-// Mock data for call logs - replace with actual API data later
 const mockTTSLogs: TTSLogEntry[] = [
   {
     service_id: 1,

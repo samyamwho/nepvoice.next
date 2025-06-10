@@ -1,10 +1,17 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+  useCallback,
+} from 'react';
 
 const WHOAMI_ENDPOINT = process.env.NEXT_PUBLIC_WHOAMI_ENDPOINT;
 
-interface Profile {
+export interface Profile {
   user_id: string;
   name: string;
   email: string;
@@ -13,83 +20,102 @@ interface Profile {
 
 interface ProfileContextType {
   profile: Profile | null;
-  loading: boolean;
-  error: Error | null;
+  isLoading: boolean;
+  error: string | null;
+  isAuthenticated: boolean;
+  fetchProfile: () => Promise<void>;
+  clearProfile: () => void;
 }
 
-const ProfileContext = createContext<ProfileContextType>({
-  profile: null,
-  loading: true, 
-  error: null,
-});
+const ProfileContext = createContext<ProfileContextType | undefined>(undefined);
 
-export const ProfileProvider = ({ children }: { children: React.ReactNode }) => {
+interface ProfileProviderProps {
+  children: ReactNode;
+}
+
+export const ProfileProvider: React.FC<ProfileProviderProps> = ({ children }) => {
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchProfile = async () => {
-      setLoading(true);
-      setError(null);
+  const fetchProfile = useCallback(async () => {
+    if (!WHOAMI_ENDPOINT) {
+      console.error("ProfileContext: NEXT_PUBLIC_WHOAMI_ENDPOINT is not defined.");
+      setError("Configuration error: WHOAMI endpoint is missing.");
+      setIsLoading(false);
       setProfile(null);
+      return;
+    }
 
-      if (!WHOAMI_ENDPOINT) {
-        console.error('WHOAMI_ENDPOINT is not defined. Please set NEXT_PUBLIC_WHOAMI_ENDPOINT in your .env.local file.');
-        setError(new Error('Application configuration error: WHOAMI endpoint is not set.'));
-        setLoading(false);
-        return;
-      }
+    setIsLoading(true);
+    setError(null);
 
-      try {
-        const response = await fetch(WHOAMI_ENDPOINT, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        });
+    try {
+      const response = await fetch(WHOAMI_ENDPOINT, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+        },
+        credentials: 'include', // Needed if using cookies
+      });
 
-        if (!response.ok) {
-          let errorMessage = `API Error: ${response.status} ${response.statusText}`;
-          try {
-            // Attempt to get a more specific error message from the response body
-            const errorData = await response.json();
-            if (errorData && (errorData.message || errorData.error)) {
-              errorMessage = `API Error: ${errorData.message || errorData.error}`;
-            }
-          } catch (jsonError) {
-            // If parsing error body fails, stick with statusText
-            console.warn('Could not parse error response JSON:', jsonError);
-          }
+      if (!response.ok) {
+        let errorMessage = `HTTP error! status: ${response.status}`;
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.message || errorData.detail || errorMessage;
+        } catch (_) {
+          // Fallback if response body isn't JSON
+        }
+
+        if (response.status === 401 || response.status === 403) {
+          setProfile(null);
+          console.warn('User is unauthorized or forbidden. Clearing profile.');
+        } else {
           throw new Error(errorMessage);
         }
-
+      } else {
         const data: Profile = await response.json();
-
-        if (!data.user_id || !data.name || !data.email) {
-            throw new Error('Received incomplete profile data from API.');
-        }
-
         setProfile(data);
-      } catch (err) {
-        console.error('Failed to fetch profile:', err);
-        setError(err instanceof Error ? err : new Error('An unknown error occurred while fetching profile data.'));
-      } finally {
-        setLoading(false);
+        console.info("Fetched profile:", data);
       }
-    };
-
-    fetchProfile();
+    } catch (err: any) {
+      console.error("Failed to fetch profile from", WHOAMI_ENDPOINT, err);
+      setError(err.message || 'An unexpected error occurred while fetching profile.');
+      setProfile(null);
+    } finally {
+      setIsLoading(false);
+    }
   }, []);
 
+  const clearProfile = useCallback(() => {
+    setProfile(null);
+    setError(null);
+  }, []);
+
+  useEffect(() => {
+    fetchProfile();
+  }, [fetchProfile]);
+
+  const isAuthenticated = !!profile && Object.keys(profile).length > 0;
+
   return (
-    <ProfileContext.Provider value={{ profile, loading, error }}>
+    <ProfileContext.Provider
+      value={{
+        profile,
+        isLoading,
+        error,
+        isAuthenticated,
+        fetchProfile,
+        clearProfile,
+      }}
+    >
       {children}
     </ProfileContext.Provider>
   );
 };
 
-export const useProfile = () => {
+export const useProfile = (): ProfileContextType => {
   const context = useContext(ProfileContext);
   if (context === undefined) {
     throw new Error('useProfile must be used within a ProfileProvider');

@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Navbar from '@/components/shared/Navbar';
 import Footer from '@/components/shared/Footer';
-import Chatbot from '@/components/chat/Chat';
+// import Chatbot from '@/components/chat/Chat';
 import PricingPage from '@/components/compage/PricingPage';
 import AudioAIPlatform from '@/components/compage/Trial';
 import FeaturedAgentsSlider from '@/components/shared/FeaturedAgent';

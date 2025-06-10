@@ -1,21 +1,20 @@
 'use client';
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import Image from "next/image";
 import { Download, Play, LayoutDashboard, TextCursor } from "lucide-react";
-// import Sidebar from "@/components/shared/Sidebar"; // Removed Sidebar import
 import Globalplayer from "@/components/shared/Globalplayer";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useAudio } from "@/components/context/AudioContext";
-import TTSDashboard from "./TTSDashboard";
+// import TTSDashboard from "./TTSDashboard"; // Commented out as per request
 
 // Define interfaces for our data structures
 interface Language {
   code: string;
   name: string;
   flag: string;
-  language: string;
+  language: string; // This is the value sent to the API
 }
 
 interface VoiceOption {
@@ -53,49 +52,27 @@ const LANGUAGES: Language[] = [
 const VOICE_OPTIONS: VoiceOption[] = [
   { id: "voice1", name: "Voice 1 (Female, Natural)", quality: "Premium" },
   { id: "voice2", name: "Voice 2 (Male, Professional)", quality: "Premium" },
-  { id: "voice3", name: "Voice 3 (Female, Casual)", quality: "Standard" },
-  { id: "voice4", name: "Voice 4 (Male, Expressive)", quality: "Premium" },
-  { id: "voice5", name: "Voice 5 (Female, Calm)", quality: "Standard" },
 ];
 
 const SAMPLE_HISTORY: HistoryItem[] = [
-  {
-    id: 1,
-    language: "en",
-    text: "Welcome to NepVoice, the best text-to-speech platform for all your needs.",
-    date: "2 hours ago",
-    duration: "00:12",
-    voice: "voice1",
-    style: 0.5,
-    speed: 1.0,
-  },
-  {
-    id: 2,
-    language: "ne",
-    text: "नमस्कार, यो नेपाली भाषामा एक परीक्षण वाक्य हो।",
-    date: "Yesterday",
-    duration: "00:08",
-    voice: "voice2",
-    style: 0.5,
-    speed: 1.0,
-  },
-  {
-    id: 3,
-    language: "en",
-    text: "This is a demonstration of our advanced voice synthesis technology.",
-    date: "May 10, 2025",
-    duration: "00:15",
-    voice: "voice3",
-    style: 0.5,
-    speed: 1.0,
-  },
+  // Add your sample history items here
 ];
 
 const TextToSpeech: React.FC = () => {
-  // Audio context
-  const { playAudio, pauseAudio, seekAudio, setVolume, isPlaying, currentTime, duration, volume, audioUrl, trackInfo } = useAudio();
+  const { 
+    playAudio, 
+    pauseAudio, 
+    seekAudio, 
+    setVolume, 
+    isPlaying, 
+    currentTime, 
+    duration, 
+    volume, 
+    audioUrl, 
+    trackInfo 
+  } = useAudio();
 
-  // Component state
+  // State management
   const [selectedLang, setSelectedLang] = useState<string>(LANGUAGES[0].code);
   const [dropdownOpen, setDropdownOpen] = useState<boolean>(false);
   const [speed, setSpeed] = useState<number>(1.0);
@@ -108,45 +85,58 @@ const TextToSpeech: React.FC = () => {
   const [favorites, setFavorites] = useState<HistoryItem[]>([]);
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [activeTab, setActiveTab] = useState<"settings" | "history">("settings");
-  const [showDashboard, setShowDashboard] = useState<boolean>(false);
+  // const [showDashboard, setShowDashboard] = useState<boolean>(false); // Commented out as per request
 
   // Refs
   const languageDropdownRef = useRef<HTMLDivElement>(null);
   const voiceDropdownRef = useRef<HTMLDivElement>(null);
 
+  // Computed values
   const selectedLanguageObj = LANGUAGES.find(l => l.code === selectedLang);
   const history = SAMPLE_HISTORY;
 
-  const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+  // Calculate total time function
+  const calculateTotalTime = useCallback((text: string) => {
+    const words = text.trim().split(/\s+/).filter(Boolean).length;
+    const estimatedSeconds = Math.ceil((words / 3) * (1 / speed));
+    const minutes = Math.floor(estimatedSeconds / 60).toString().padStart(2, "0");
+    const seconds = (estimatedSeconds % 60).toString().padStart(2, "0");
+    return `${minutes}:${seconds}`;
+  }, [speed]);
+
+  // Handler functions - moved all useCallback functions before JSX
+  /* // Commented out as per request
+  const handleToggleDashboard = useCallback(() => {
+    setShowDashboard(prev => !prev);
+  }, []);
+  */
+
+  const handleTextChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const text = e.target.value;
     setInputText(text);
     setCharCount(text.length);
     setWordCount(text.trim().split(/\s+/).filter(Boolean).length);
     setTotalTime(calculateTotalTime(text));
-  };
+  }, [calculateTotalTime]);
 
-  const handleVoiceSelect = (voiceId: string) => {
+  const handleVoiceSelect = useCallback((voiceId: string) => {
     setSelectedVoice(voiceId);
     setVoiceDropdownOpen(false);
-  };
+  }, []);
 
-  const handleFavorite = (item: HistoryItem) => {
-    const isFavorite = favorites.some(
-      (fav) => fav.text === item.text && fav.voice === item.voice
-    );
+  const handleFavorite = useCallback((item: HistoryItem) => {
+    const isFavorite = favorites.some((fav) => fav.id === item.id);
 
     if (isFavorite) {
-      setFavorites(favorites.filter(
-        (fav) => !(fav.text === item.text && fav.voice === item.voice)
-      ));
+      setFavorites(favorites.filter(fav => fav.id !== item.id));
       toast.success('Removed from favorites');
     } else {
       setFavorites([...favorites, item]);
       toast.success('Added to favorites');
     }
-  };
+  }, [favorites]);
 
-  const handleDownload = () => {
+  const handleDownload = useCallback(() => {
     if (audioBlob) {
       const url = URL.createObjectURL(audioBlob);
       const a = document.createElement("a");
@@ -156,19 +146,118 @@ const TextToSpeech: React.FC = () => {
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
+      toast.success("Audio download started.");
     } else {
-      toast.info("No audio generated to download.");
+      toast.info("No audio generated to download yet.");
     }
-  };
+  }, [audioBlob]);
 
-  const calculateTotalTime = (text: string) => {
-    const words = text.trim().split(/\s+/).filter(Boolean).length;
-    const estimatedSeconds = Math.ceil((words / 3) * (1 / speed));
-    const minutes = Math.floor(estimatedSeconds / 60).toString().padStart(2, "0");
-    const seconds = (estimatedSeconds % 60).toString().padStart(2, "0");
-    return `${minutes}:${seconds}`;
-  };
+  const fetchAndPlayTTS = useCallback(async (textToConvert: string, langCode: string, voiceId?: string, playSpeed?: number) => {
+    const currentLangObj = LANGUAGES.find(l => l.code === langCode);
+    if (!currentLangObj) {
+      toast.error("Selected language details not found.");
+      console.error("Selected language details not found for code:", langCode);
+      return;
+    }
+    const apiLang = currentLangObj.language;
 
+    const ttsEndpoint = process.env.NEXT_PUBLIC_TTS_ENDPOINT;
+
+    if (!ttsEndpoint) {
+      toast.error("TTS API endpoint is not configured. Please contact support.");
+      console.error("Error: NEXT_PUBLIC_TTS_ENDPOINT is not defined in environment variables.");
+      return;
+    }
+
+    let apiUrl = `${ttsEndpoint}?text=${encodeURIComponent(textToConvert)}&lang=${encodeURIComponent(apiLang)}`;
+    
+    console.log("Fetching TTS from:", apiUrl);
+
+    try {
+      const response = await fetch(apiUrl, {
+        method: "GET",
+        headers: {
+          accept: "application/json",
+        },
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        let errorBody = "Could not retrieve error details.";
+        try {
+          errorBody = await response.text();
+        } catch (e) {
+          console.warn("Could not parse error response body:", e);
+        }
+        const errorMessage = `API Error ${response.status}: ${response.statusText}. Details: ${errorBody.substring(0, 200)}`;
+        console.error("Failed to fetch audio:", errorMessage);
+        toast.error(`Audio generation failed (${response.status}).`);
+        throw new Error(`Failed to fetch audio. Status: ${response.status}, Body: ${errorBody}`);
+      }
+
+      const blob = await response.blob();
+      console.log("Received blob type:", blob.type);
+      
+      if (!blob.type.startsWith('audio/')) {
+        toast.error(`Received unexpected content type: ${blob.type}. Expected audio.`);
+        console.error(`Received unexpected content type: ${blob.type}. Expected audio.`);
+        return;
+      }
+
+      const urlObject = URL.createObjectURL(blob);
+      setAudioBlob(blob);
+
+      playAudio(urlObject, {
+        id: Date.now().toString(),
+        title: textToConvert.substring(0, 30) + (textToConvert.length > 30 ? '...' : ''),
+        speaker: currentLangObj.name,
+        createdAt: new Date().toLocaleDateString(),
+        audioUrl: urlObject
+      });
+    } catch (error) {
+      console.error('Error in fetchAndPlayTTS:', error);
+      if (!(error instanceof Error && error.message.startsWith("Failed to fetch audio"))) {
+        toast.error("Failed to generate audio. Check console for details.");
+      }
+    }
+  }, [playAudio]);
+
+  const handleGenerate = useCallback(async () => {
+    if (!inputText.trim()) {
+      toast.error('Please enter some text to convert to speech.');
+      return;
+    }
+    if (inputText.length > 5000) {
+      toast.error('Text is too long. Maximum 5000 characters allowed.');
+      return;
+    }
+
+    toast.info("Generating audio...");
+    try {
+      await fetchAndPlayTTS(inputText, selectedLang, selectedVoice, speed);
+    } catch (error) {
+      console.error('Error during handleGenerate:', error);
+    }
+  }, [inputText, selectedLang, selectedVoice, speed, fetchAndPlayTTS]);
+
+  const handleHistoryPlay = useCallback(async (item: HistoryItem) => {
+    setInputText(item.text);
+    setSelectedLang(item.language);
+    setSelectedVoice(item.voice);
+    setSpeed(item.speed);
+    setCharCount(item.text.length);
+    setWordCount(item.text.trim().split(/\s+/).filter(Boolean).length);
+    setTotalTime(calculateTotalTime(item.text));
+
+    toast.info(`Playing from history: ${item.text.substring(0,20)}...`);
+    try {
+      await fetchAndPlayTTS(item.text, item.language, item.voice, item.speed);
+    } catch (error) {
+      console.error('Error playing history item:', error);
+    }
+  }, [fetchAndPlayTTS, calculateTotalTime]);
+
+  // Effect for handling clicks outside dropdowns
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (languageDropdownRef.current && !languageDropdownRef.current.contains(event.target as Node)) {
@@ -183,89 +272,7 @@ const TextToSpeech: React.FC = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
-    switch (type) {
-      case 'success':
-        toast.success(message);
-        break;
-      case 'error':
-        toast.error(message);
-        break;
-      default:
-        toast.info(message);
-    }
-  };
-
-  const fetchAndPlayTTS = async () => {
-    try {
-      const url = `${process.env.NEXT_PUBLIC_TTS_ENDPOINT}?text=${encodeURIComponent(inputText)}&lang=${selectedLanguageObj?.language}`;
-      const response = await fetch(url, {
-        method: "GET",
-        headers: {
-          accept: "application/json",
-        },
-      });
-
-      if (!response.ok) throw new Error("Failed to fetch audio");
-
-      const blob = await response.blob();
-      const urlObject = URL.createObjectURL(blob);
-      setAudioBlob(blob);
-
-      playAudio(urlObject, {
-        id: Date.now().toString(),
-        title: inputText.substring(0, 30) + (inputText.length > 30 ? '...' : ''),
-        speaker: selectedLanguageObj?.name,
-        createdAt: new Date().toLocaleDateString(),
-        audioUrl: urlObject
-      });
-    } catch (error) {
-      showToast("Failed to generate audio. Please try again.", "error");
-      throw error;
-    }
-  };
-
-  const handleGenerate = async () => {
-    if (!inputText.trim()) {
-      toast.error('Please enter some text to convert to speech');
-      return;
-    }
-
-    if (inputText.length > 5000) {
-      toast.error('Text is too long. Maximum 5000 characters allowed.');
-      return;
-    }
-
-    try {
-      await fetchAndPlayTTS();
-      toast.success('Audio generated successfully');
-    } catch (error) {
-      console.error('Error generating audio:', error);
-    }
-  };
-
-  const handleHistoryPlay = async (item: HistoryItem) => {
-    try {
-      setInputText(item.text);
-      setSelectedLang(item.language);
-      setSelectedVoice(item.voice);
-      setSpeed(item.speed);
-      setCharCount(item.text.length);
-      setWordCount(item.text.trim().split(/\s+/).filter(Boolean).length);
-      setTotalTime(calculateTotalTime(item.text));
-
-      await fetchAndPlayTTS();
-      toast.success('Playing audio from history');
-    } catch (error) {
-      console.error('Error playing history item:', error);
-      toast.error('Failed to play audio from history');
-    }
-  };
-
-  const handleToggleDashboard = () => {
-    setShowDashboard(prev => !prev);
-  };
-
+  // JSX Structure
   return (
     <div className="relative flex flex-col md:flex-row h-screen w-full overflow-hidden bg-white">
       <ToastContainer
@@ -279,7 +286,7 @@ const TextToSpeech: React.FC = () => {
         draggable
         pauseOnHover
         theme="light"
-        style={{ zIndex: 9999 }}
+        style={{ zIndex: 99999 }}
         toastStyle={{
           minWidth: '200px',
           maxWidth: '300px',
@@ -292,31 +299,32 @@ const TextToSpeech: React.FC = () => {
         }}
       />
 
-      {/* This div with flex-1 will now expand to fill the available width */}
       <div className="flex-1 flex flex-col h-full w-full overflow-y-auto p-0 md:p-0">
         <div className="w-full border-b bg-white border-gray-300 sticky top-0 z-20">
           <div className="px-4 py-3 md:px-12 md:py-4 flex items-center justify-between">
             <div className="flex items-center gap-2 md:gap-3">
               <TextCursor className="w-6 h-6 md:w-8 md:h-8 text-gray-800" />
               <h1 className="text-xl md:text-3xl font-bold text-gray-800 font-custom">
-                {showDashboard ? "Text to Speech Dashboard" : "Text to Speech"}
+                {/* {showDashboard ? "Text to Speech Dashboard" : "Text to Speech"} */}
+                Text to Speech {/* Changed as showDashboard is effectively false */}
               </h1>
             </div>
             <button
               className="px-3 py-2 md:px-4 md:py-2 text-sm md:text-base font-medium bg-gradient-to-r from-gray-700 to-gray-900 text-white rounded-lg hover:from-gray-800 hover:to-black transition-all duration-300 flex items-center gap-2 shadow-md hover:shadow-lg"
-              onClick={handleToggleDashboard}
+              // onClick={handleToggleDashboard} // Commented out as per request
             >
               <LayoutDashboard className="h-4 w-4 md:h-5 md:w-5" />
-              {showDashboard ? "Back to TTS" : "Dashboard"}
+              {/* {showDashboard ? "Back to TTS" : "Dashboard"} */}
+              Dashboard {/* Changed as showDashboard is effectively false */}
             </button>
           </div>
         </div>
 
-        {showDashboard ? (
+        {/* {showDashboard ? ( // Commented out as per request
           <div className="flex-1 w-full h-full overflow-y-auto">
             <TTSDashboard />
           </div>
-        ) : (
+        ) : ( */}
           <div className="flex-1 flex flex-col md:flex-row w-full p-4 md:p-0">
             {/* Left Section: Text Input */}
             <div className="flex-1 md:flex-[2] flex flex-col items-start justify-start z-10 w-full md:p-6">
@@ -332,6 +340,7 @@ const TextToSpeech: React.FC = () => {
                   placeholder="Enter text to convert to speech..."
                   value={inputText}
                   onChange={handleTextChange}
+                  maxLength={5000}
                 />
               </div>
               <div className="w-full flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -380,7 +389,7 @@ const TextToSpeech: React.FC = () => {
                 </div>
               </div>
 
-              <div className="w-full mt-2 md:mt-4 overflow-y-auto flex-1">
+              <div className="w-full mt-2 md:mt-4 overflow-y-auto flex-1" style={{ maxHeight: 'calc(100vh - 250px)' }}>
                 {activeTab === "settings" && (
                   <div className="w-full space-y-4 md:space-y-6">
                     <div className="bg-white rounded-lg p-6 border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200">
@@ -401,8 +410,8 @@ const TextToSpeech: React.FC = () => {
                           >
                             <div className="flex items-center gap-2 md:gap-3">
                               <Image
-                                src={selectedLanguageObj?.flag || ''}
-                                alt={selectedLanguageObj?.name || ''}
+                                src={selectedLanguageObj?.flag || '/assets/default-flag.png'}
+                                alt={selectedLanguageObj?.name || 'Unknown Language'}
                                 width={24}
                                 height={24}
                                 className="rounded-full ring-2 ring-gray-100"
@@ -419,7 +428,7 @@ const TextToSpeech: React.FC = () => {
                             </svg>
                           </button>
                           {dropdownOpen && (
-                            <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                            <div className="absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
                               {LANGUAGES.map((lang) => (
                                 <button
                                   key={lang.code}
@@ -454,7 +463,7 @@ const TextToSpeech: React.FC = () => {
                             onClick={() => setVoiceDropdownOpen(!voiceDropdownOpen)}
                           >
                             <span className="text-black font-custom">
-                              {VOICE_OPTIONS.find((v) => v.id === selectedVoice)?.name}
+                              {VOICE_OPTIONS.find((v) => v.id === selectedVoice)?.name || "Select Voice"}
                             </span>
                             <svg
                               className={`w-4 h-4 md:w-5 md:h-5 transition-transform ${voiceDropdownOpen ? "rotate-180" : ""}`}
@@ -466,16 +475,14 @@ const TextToSpeech: React.FC = () => {
                             </svg>
                           </button>
                           {voiceDropdownOpen && (
-                            <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                            <div className="absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
                               {VOICE_OPTIONS.map((voice) => (
                                 <button
                                   key={voice.id}
                                   className={`w-full text-left px-3 py-2 md:px-4 md:py-3 hover:bg-gray-50 transition-colors text-black font-custom text-sm md:text-base ${
                                     selectedVoice === voice.id ? "bg-gray-100" : ""
                                   }`}
-                                  onClick={() => {
-                                    handleVoiceSelect(voice.id);
-                                  }}
+                                  onClick={() => handleVoiceSelect(voice.id)}
                                 >
                                   <div className="flex justify-between items-center">
                                     <span className="text-black font-custom">{voice.name}</span>
@@ -485,6 +492,21 @@ const TextToSpeech: React.FC = () => {
                               ))}
                             </div>
                           )}
+                        </div>
+
+                        <div>
+                          <label htmlFor="speedControl" className="block text-sm text-gray-700 mb-2 font-custom">Speed</label>
+                          <input
+                            type="range"
+                            id="speedControl"
+                            min="0.5"
+                            max="2.0"
+                            step="0.1"
+                            value={speed}
+                            onChange={(e) => setSpeed(parseFloat(e.target.value))}
+                            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-gray-700"
+                          />
+                          <div className="text-right text-sm text-gray-600 mt-1 font-custom">{speed.toFixed(1)}x</div>
                         </div>
                       </div>
                     </div>
@@ -500,7 +522,7 @@ const TextToSpeech: React.FC = () => {
                           No conversion history yet.
                         </p>
                         <p className="text-gray-400 text-xs md:text-sm mt-2">
-                          Your text-to-speech conversions will appear here
+                          Your text-to-speech conversions will appear here.
                         </p>
                       </div>
                     ) : (
@@ -512,8 +534,8 @@ const TextToSpeech: React.FC = () => {
                           <div className="flex items-center justify-between mb-3">
                             <div className="flex items-center gap-2">
                               <Image
-                                src={LANGUAGES.find((l) => l.code === item.language)?.flag || ''}
-                                alt={LANGUAGES.find((l) => l.code === item.language)?.name || ''}
+                                src={LANGUAGES.find((l) => l.code === item.language)?.flag || '/assets/default-flag.png'}
+                                alt={LANGUAGES.find((l) => l.code === item.language)?.name || 'Unknown Language'}
                                 width={24}
                                 height={24}
                                 className="rounded-full ring-2 ring-gray-100"
@@ -526,11 +548,11 @@ const TextToSpeech: React.FC = () => {
                               <button
                                 className="text-gray-400 hover:text-yellow-500 transition-colors duration-200"
                                 onClick={() => handleFavorite(item)}
-                                aria-label={favorites.some(f => f.text === item.text && f.voice === item.voice) ? "Remove from favorites" : "Add to favorites"}
+                                aria-label={favorites.some(f => f.id === item.id) ? "Remove from favorites" : "Add to favorites"}
                               >
                                 <svg
                                   className="w-4 h-4 md:w-5 md:h-5"
-                                  fill={favorites.some(f => f.text === item.text && f.voice === item.voice) ? "currentColor" : "none"}
+                                  fill={favorites.some(f => f.id === item.id) ? "currentColor" : "none"}
                                   stroke="currentColor"
                                   viewBox="0 0 24 24"
                                 >
@@ -557,14 +579,18 @@ const TextToSpeech: React.FC = () => {
                                 onClick={() => handleHistoryPlay(item)}
                                 aria-label="Play history item"
                               >
-                                <Play className="w-4 h-4 md:w-5 md:h-5" />
+                                <Play className="w-4 h-4 md:w-5 md:w-5" />
                               </button>
+                              {/* This download for history item would ideally fetch its specific audio */}
                               <button
                                 className="bg-black text-white rounded-full p-2 shadow-sm hover:bg-gray-800 transition-all duration-200 min-w-[36px] min-h-[36px] hover:shadow-md"
-                                onClick={() => handleDownload()}
+                                onClick={() => {
+                                    toast.info("To download history audio, play it first, then use the main download button, or implement specific history download.");
+                                    // Or implement downloadSpecificHistoryAudio(item) as discussed in prior review
+                                }}
                                 aria-label="Download history item"
                               >
-                                <Download className="w-4 h-4 md:w-5 md:h-5" />
+                                <Download className="w-4 h-4 md:w-5 md:w-5" />
                               </button>
                             </div>
                           </div>
@@ -576,7 +602,7 @@ const TextToSpeech: React.FC = () => {
               </div>
             </div>
           </div>
-        )}
+        {/* )} // Commented out as per request */}
       </div>
       <Globalplayer
         isPlaying={isPlaying}
@@ -585,43 +611,34 @@ const TextToSpeech: React.FC = () => {
         volume={volume}
         onPlayPause={() => {
           if (audioUrl) {
-            if (isPlaying) {
-              pauseAudio();
-            } else {
-              playAudio(audioUrl, trackInfo || {
-                id: Date.now().toString(),
-                title: inputText.substring(0, 30) + (inputText.length > 30 ? '...' : ''),
-                speaker: selectedLanguageObj?.name,
-                audioUrl: audioUrl
-              });
-            }
+            if (isPlaying) pauseAudio();
+            else playAudio(audioUrl, trackInfo);
           } else if (inputText.trim()) {
-            fetchAndPlayTTS();
+            handleGenerate(); // Generate if no audio loaded but text is present
+          } else {
+            toast.info("Enter text or select from history to play.");
           }
         }}
         onSeek={(percent) => {
           if (typeof duration === 'number' && duration > 0 && audioUrl) {
-            const timeInSeconds = (percent / 100) * duration;
-            if (!isNaN(timeInSeconds)) seekAudio(timeInSeconds);
+            seekAudio((percent / 100) * duration);
           }
         }}
         onVolumeChange={setVolume}
         onForward={() => {
           if (typeof currentTime === 'number' && typeof duration === 'number' && audioUrl) {
-            const newTime = Math.min(currentTime + 10, duration);
-            if (!isNaN(newTime)) seekAudio(newTime);
+            seekAudio(Math.min(currentTime + 10, duration));
           }
         }}
         onBackward={() => {
           if (typeof currentTime === 'number' && audioUrl) {
-            const newTime = Math.max(currentTime - 10, 0);
-            if (!isNaN(newTime)) seekAudio(newTime);
+            seekAudio(Math.max(currentTime - 10, 0));
           }
         }}
         trackInfo={trackInfo || {
-          id: Date.now().toString(),
-          title: inputText.substring(0, 30) + (inputText.length > 30 ? '...' : ''),
-          speaker: selectedLanguageObj?.name,
+          id: 'default-track',
+          title: inputText ? inputText.substring(0, 30) + (inputText.length > 30 ? '...' : '') : 'No audio loaded',
+          speaker: selectedLanguageObj?.name || 'N/A',
           audioUrl: audioUrl || ''
         }}
       />
