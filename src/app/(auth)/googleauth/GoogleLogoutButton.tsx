@@ -1,11 +1,11 @@
 'use client';
 
-import { JSX, useState } // React type no longer needed for CSSProperties in newer React/TS
-from 'react';
+import { JSX, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
+import { useProfile } from '@/app/(auth)/CurrentProfile'; // Import the profile hook
 
-interface GoogleLogoutButtonProps { // Renamed interface to match component
+interface GoogleLogoutButtonProps {
   onLogoutSuccess?: () => void;
   redirectPath?: string;
   buttonText?: string;
@@ -14,13 +14,14 @@ interface GoogleLogoutButtonProps { // Renamed interface to match component
 
 const GOOGLE_LOGOUT_ENDPOINT: string | undefined = process.env.NEXT_PUBLIC_GOOGLE_LOGOUT_ENDPOINT;
 
-export default function GoogleLogoutButton({ // Renamed function
+export default function GoogleLogoutButton({
   onLogoutSuccess,
-  redirectPath = '/', // Default redirect is back to login page
+  redirectPath = '/',
   buttonText = 'Logout',
   loadingText = 'Logging out...'
 }: GoogleLogoutButtonProps): JSX.Element {
   const router: AppRouterInstance = useRouter();
+  const { clearProfile } = useProfile(); // Get clearProfile from context
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -33,7 +34,7 @@ export default function GoogleLogoutButton({ // Renamed function
 
     setIsLoading(true);
     setError(null);
-    console.log("Attempting to logout via endpoint:", GOOGLE_LOGOUT_ENDPOINT); // Debug log
+    console.log("Attempting to logout via endpoint:", GOOGLE_LOGOUT_ENDPOINT);
 
     try {
       const response: Response = await fetch(GOOGLE_LOGOUT_ENDPOINT, {
@@ -44,7 +45,7 @@ export default function GoogleLogoutButton({ // Renamed function
         credentials: 'include',
       });
 
-      console.log("Logout API response status:", response.status); // Debug log
+      console.log("Logout API response status:", response.status);
 
       if (response.ok) {
         try {
@@ -54,18 +55,23 @@ export default function GoogleLogoutButton({ // Renamed function
           console.log('Backend logout successful, but response body was not standard JSON or was empty.');
         }
 
+        // Clear the client-side profile state BEFORE calling callbacks or redirecting
+        clearProfile();
+        
         if (onLogoutSuccess) {
-          onLogoutSuccess(); // This will now call handleLogoutSuccess in LoginForm
+          onLogoutSuccess();
         }
-        router.push(redirectPath);
-        router.refresh();
+        
+        // Force a hard navigation to ensure middleware re-runs
+        // This is necessary because Next.js middleware doesn't run on client-side navigation
+        window.location.href = redirectPath;
       } else {
         let errorDataMessage: string = 'Server error during logout.';
         try {
-            const errorData: any = await response.json();
-            errorDataMessage = errorData.message || errorData.error || JSON.stringify(errorData);
+          const errorData: any = await response.json();
+          errorDataMessage = errorData.message || errorData.error || JSON.stringify(errorData);
         } catch (e) {
-            errorDataMessage = (await response.text()) || `Logout failed with status: ${response.status}`;
+          errorDataMessage = (await response.text()) || `Logout failed with status: ${response.status}`;
         }
         console.error('Logout failed from backend:', response.status, errorDataMessage);
         setError(errorDataMessage);
@@ -86,7 +92,7 @@ export default function GoogleLogoutButton({ // Renamed function
     borderRadius: '4px',
     cursor: isLoading ? 'not-allowed' : 'pointer',
     fontSize: '16px',
-    width: '100%', // Make it full width like typical login buttons
+    width: '100%',
   };
 
   return (
@@ -95,7 +101,7 @@ export default function GoogleLogoutButton({ // Renamed function
         onClick={handleLogout}
         disabled={isLoading}
         style={buttonStyle}
-        type="button" // Good practice for buttons not submitting forms
+        type="button"
       >
         {isLoading ? loadingText : buttonText}
       </button>
