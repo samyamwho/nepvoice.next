@@ -8,6 +8,7 @@ import { ProfileProvider } from "@/app/(auth)/CurrentProfile";
 const inter = Inter({
   subsets: ["latin"],
   weight: ["400", "700"],
+  variable: '--font-inter',
 });
 
 export const metadata: Metadata = {
@@ -21,7 +22,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className={inter.variable}>
       <body className={inter.className}>
         <AudioProvider>
           <ProfileProvider>
