@@ -3,42 +3,9 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import Link from 'next/link';
-import GoogleLogoutButton from './logout/page';
+import GoogleLoginButton from './GoogleLoginButton';
+import GoogleLogoutButton from './GoogleLogoutButton';
 import Image from 'next/image';
-
-const GOOGLE_LOGIN_ENDPOINT = process.env.NEXT_PUBLIC_GOOGLE_LOGIN_ENDPOINT;
-
-export const GoogleLoginButton = () => {
-  const [isLoading, setIsLoading] = useState(false);
-
-  const handleLogin = () => {
-    setIsLoading(true);
-    if (GOOGLE_LOGIN_ENDPOINT) {
-      window.location.href = GOOGLE_LOGIN_ENDPOINT;
-    } else {
-      console.error("Google login endpoint is not configured.");
-      setIsLoading(false);
-    }
-  };
-
-  return (
-    <button
-      onClick={handleLogin}
-      disabled={isLoading}
-      className="w-full bg-[#000000] hover:bg-[#333433] text-white rounded-lg px-4 py-2.5 shadow-sm transition-all duration-300 text-sm font-medium flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
-    >
-      {isLoading ? (
-        <span className="flex items-center justify-center">
-          Logging in...
-        </span>
-      ) : (
-        <>
-          Log in with Google
-        </>
-      )}
-    </button>
-  );
-};
 
 const LoginForm = () => {
   const router = useRouter();
@@ -78,18 +45,9 @@ const LoginForm = () => {
     }
   }, [router, searchParams, pathname, isVerifyingSession]);
 
-  const handleLogoutSuccess = () => {
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('userData');
-  };
-
-  const handleLogoutError = (error: Error) => {
-    console.error("Logout failed from LoginForm:", error.message);
-  };
-
   if (isVerifyingSession) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-white">
+      <div className="flex items-center justify-center min-h-screen">
         <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-sm text-center">
           <h2 className="text-2xl font-semibold text-black">Verifying Your Session</h2>
           <p className="text-sm text-gray-600">Please wait a moment...</p>
@@ -102,7 +60,7 @@ const LoginForm = () => {
   }
 
   return (
-    <section className="min-h-screen flex items-center justify-center relative bg-white">
+    <section className="min-h-screen flex items-center justify-center relative bg-[url('/assets/pricing.png')] bg-cover">
       <div className="absolute inset-0 bg-cover bg-center bg-no-repeat">
         <div className="absolute inset-0 bg-white opacity-0"></div>
       </div>
@@ -128,9 +86,6 @@ const LoginForm = () => {
             <div className="space-y-4">
               <GoogleLoginButton />
               <GoogleLogoutButton
-                onLogoutSuccess={handleLogoutSuccess}
-                onLogoutError={handleLogoutError}
-                className="w-full"
               />
             </div>
             <p className="text-sm font-light text-black">

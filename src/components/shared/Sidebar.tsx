@@ -23,6 +23,7 @@ import { useProfile } from "@/app/(auth)/CurrentProfile";
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
+import GoogleLogoutButton from "@/app/(auth)/googleauth/GoogleLogoutButton";
 
 const Sidebar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -71,11 +72,6 @@ const Sidebar = () => {
     setUserMenuExpanded(false);
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('userData');
-    router.push('/login');
-  };
 
   return (
     <>
@@ -386,8 +382,9 @@ const Sidebar = () => {
                     <button onClick={() => handleUserMenuClick('profile')} className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100">Profile</button>
                     <button onClick={() => handleUserMenuClick('api-keys')} className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100">API Keys</button>
                     <button onClick={() => handleUserMenuClick('webhooks')} className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100">Webhooks</button>
-                    <button onClick={handleLogout} className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100 text-red-600">Sign out</button>
+                    {/* <button onClick={handleLogout} className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100 text-red-600">Sign out</button> */}
                   </div>
+                  <GoogleLogoutButton/>
                 </div>
               )}
             </div>
