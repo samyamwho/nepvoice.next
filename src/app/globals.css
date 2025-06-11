@@ -20,25 +20,9 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Inter;
-}
-
-
-body {
   color: white;
-
 }
 
-/* Add this to your Dashboard.css */
-
-
-
-/* .dashboard-container {
-  background-image: url('../assets/Frame 67.png');
-  background-size: contain;
-  background-position: top center;
-  background-repeat: no-repeat;
-  height: auto;
-} */
 
 .main-content {
   opacity: 0;
@@ -75,7 +59,7 @@ body {
 .services-section {
   opacity: 0;
   transform: translateY(50px);
-  transition: all 0.8s ease-in-out; /* Smooth transition for both in and out */
+  transition: all 0.8s ease-in-out;
   
 }
 
