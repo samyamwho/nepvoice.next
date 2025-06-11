@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import Image from "next/image";
-import { Download, Mic, FileAudio, Square, Play, Trash2, ChevronRight, BarChart2} from "lucide-react";
+import { Download, Mic, FileAudio, Square, Play, Trash2, ChevronRight, BarChart2, LayoutDashboard } from "lucide-react";
 import { useAudio } from '@/components/context/AudioContext';
 import Globalplayer from '@/components/shared/Globalplayer';
 import { toast } from 'react-toastify';
@@ -373,8 +373,8 @@ const AudioTranscriberPage = (): React.ReactElement => {
             onClick={() => setShowDashboard(!showDashboard)}
             className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#000000] text-white hover:bg-[#2b2a2a] transition-colors"
           >
-            <BarChart2 size={18} />
-            {showDashboard ? "Close Analytics" : "Show Analytics"}
+            <LayoutDashboard size={18} />
+            {showDashboard ? "Close Dashboard" : "Dashboard"}
           </button>
         </header>
 

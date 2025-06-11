@@ -243,7 +243,7 @@ export default function AudioDashboard() {
                 />
               </div>
               <div className="w-full md:w-1/3 h-full border-l border-gray-200 bg-gray-50 flex flex-col">
-                <div className="flex border-b border-gray-300 bg-gray-100">
+                <div className="flex border-b h-18 border-gray-300 bg-gray-100">
                   <button
                     className={tabButtonClasses(activeFlowchartTab === 'exporter')}
                     onClick={() => setActiveFlowchartTab('exporter')}

@@ -7,6 +7,7 @@ import {
   ChevronRight,
   Phone,
   BarChart2,
+  LayoutDashboard,
 } from "lucide-react";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -147,9 +148,9 @@ const Audiocall: React.FC = () => {
 
           <button
             onClick={() => setShowDashboard(!showDashboard)}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#000000] text-white hover:bg-[#2b2a2a] transition-colors"
+              className="px-3 py-2 md:px-4 md:py-2 text-sm md:text-base font-medium bg-black text-white rounded-lg hover:from-gray-800 hover:to-black transition-all duration-300 flex items-center gap-2 shadow-md hover:shadow-lg"
           >
-            <BarChart2 size={18} />
+            <LayoutDashboard size={18} />
             {showDashboard ? "Close Dashboard" : "Dashboard"}
           </button>
         </header>

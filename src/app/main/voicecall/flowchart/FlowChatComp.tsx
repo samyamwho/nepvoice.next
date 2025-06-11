@@ -38,46 +38,54 @@ const FlowChatComp: React.FC = () => {
   const callData = { conversation: mockConversationData };
 
   return (
-    <div className="h-full flex flex-col bg-white rounded-lg shadow">
-        <div className="flex-grow bg-gray-50 shadow-inner rounded-t-lg p-4 space-y-4 overflow-y-auto mb-4">
-          {Object.entries(callData.conversation).map(([key, turn]) => (
-            <React.Fragment key={key}>
-              {turn.agent && (
-                <div className="flex justify-end">
-                  <div className="max-w-[85%] sm:max-w-[80%] md:max-w-[75%] ml-auto">
-                    <div className="flex items-center justify-end space-x-2 mb-1">  
-                      <span className="text-xs font-medium text-indigo-600">NepVoice AI</span>
-                      <span className="text-xs text-gray-500">{formatTimestamp(turn.agent.timestamp)}</span>
-                    </div>
-                    <div className="bg-indigo-50 p-3 rounded-xl rounded-tr-none shadow-sm border border-indigo-100">
-                      <p className="text-sm text-gray-800 leading-relaxed">{turn.agent.speaks}</p>
-                    </div>
+    <div className="h-full flex flex-col bg-white rounded-lg shadow relative">
+      <div className="flex-grow bg-gray-50 shadow-inner rounded-t-lg p-4 space-y-6 overflow-y-auto mb-2">
+        {Object.entries(callData.conversation).map(([key, turn]) => (
+          <React.Fragment key={key}>
+            {turn.agent && (
+              <div className="flex justify-end group">
+                <div className="max-w-[85%] sm:max-w-[80%] md:max-w-[75%] ml-auto transition-all">
+                  <div className="flex items-center justify-end space-x-2 mb-1">
+                    <span className="text-xs font-semibold text-indigo-700">NepVoice AI</span>
+                    <span className="text-xs text-gray-400">{formatTimestamp(turn.agent.timestamp)}</span>
+                  </div>
+                  <div className="bg-indigo-50 p-3 rounded-2xl rounded-tr-none shadow-sm border border-indigo-100 group-hover:bg-indigo-100 transition">
+                    <p className="text-sm text-gray-800 leading-relaxed">{turn.agent.speaks}</p>
                   </div>
                 </div>
-              )}
-              {turn.customer && (
-                <div className="flex justify-start">
-                  <div className="max-w-[85%] sm:max-w-[80%] md:max-w-[75%] mr-auto">
-                    <div className="flex items-center space-x-2 mb-1">
-                      <span className="text-xs font-medium text-emerald-600">You</span>
-                      <span className="text-xs text-gray-500">{formatTimestamp(turn.customer.timestamp)}</span>
-                    </div>
-                    <div className="bg-emerald-50 p-3 rounded-xl rounded-tl-none shadow-sm border border-emerald-100">
-                      <p className="text-sm text-gray-800 leading-relaxed">{turn.customer.speaks}</p>
-                    </div>
+              </div>
+            )}
+            {turn.customer && (
+              <div className="flex justify-start group">
+                <div className="max-w-[85%] sm:max-w-[80%] md:max-w-[75%] mr-auto transition-all">
+                  <div className="flex items-center space-x-2 mb-1">
+                    <span className="text-xs font-semibold text-emerald-700">You</span>
+                    <span className="text-xs text-gray-400">{formatTimestamp(turn.customer.timestamp)}</span>
+                  </div>
+                  <div className="bg-emerald-50 p-3 rounded-2xl rounded-tl-none shadow-sm border border-emerald-100 group-hover:bg-emerald-100 transition">
+                    <p className="text-sm text-gray-800 leading-relaxed">{turn.customer.speaks}</p>
                   </div>
                 </div>
-              )}
-            </React.Fragment>
-          ))}
-        </div>
-        <div className="p-3 border-t border-gray-200">
-          <input
-            type="text"
-            placeholder="Chat with our system to build your flowchart..."
-            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm transition-shadow duration-200 ease-in-out"
-          />
-        </div>
+              </div>
+            )}
+          </React.Fragment>
+        ))}
+      </div>
+      <div className="sticky bottom-0 bg-transparent rounded-b-lg shadow-lg p-2 flex items-center gap-2">
+        <input
+          type="text"
+          placeholder="Chat with our system to build your flowchart..."
+          className="flex-1 p-3 border text-black border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm transition-shadow duration-200 ease-in-out outline-none"
+        />
+        <button
+          className="p-2 rounded-lg bg-indigo-500 hover:bg-indigo-600 transition text-white shadow"
+          aria-label="Send"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14M12 5l7 7-7 7" />
+          </svg>
+        </button>
+      </div>
     </div>
   );
 };

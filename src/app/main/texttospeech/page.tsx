@@ -301,16 +301,14 @@ const TextToSpeech: React.FC = () => {
 
       <div className="flex-1 flex flex-col h-full w-full overflow-y-auto p-0 md:p-0">
         <div className="w-full border-b bg-white border-gray-300 sticky top-0 z-20">
-          <div className="px-4 py-3 md:px-12 md:py-4 flex items-center justify-between">
+          <div className="px-4 py-3 md:px-4 md:py-4 flex items-center justify-between">
             <div className="flex items-center gap-2 md:gap-3">
-              <TextCursor className="w-6 h-6 md:w-8 md:h-8 text-gray-800" />
-              <h1 className="text-xl md:text-3xl font-bold text-gray-800 font-custom">
-                {/* {showDashboard ? "Text to Speech Dashboard" : "Text to Speech"} */}
-                Text to Speech {/* Changed as showDashboard is effectively false */}
-              </h1>
+            <h1 className="text-xl md:text-2xl text-gray-800 font-custom ml-5">
+              Text to Speech
+            </h1>
             </div>
             <button
-              className="px-3 py-2 md:px-4 md:py-2 text-sm md:text-base font-medium bg-gradient-to-r from-gray-700 to-gray-900 text-white rounded-lg hover:from-gray-800 hover:to-black transition-all duration-300 flex items-center gap-2 shadow-md hover:shadow-lg"
+              className="px-3 py-2 md:px-4 md:py-2 text-sm md:text-base font-medium bg-black text-white rounded-lg hover:from-gray-800 hover:to-black transition-all duration-300 flex items-center gap-2 shadow-md hover:shadow-lg"
               // onClick={handleToggleDashboard} // Commented out as per request
             >
               <LayoutDashboard className="h-4 w-4 md:h-5 md:w-5" />
