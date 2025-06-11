@@ -75,11 +75,9 @@ export const ProfileProvider: React.FC<ProfileProviderProps> = ({
           // Fallback if response body isn't JSON
         }
 
-        // For cookie-based auth, 401/403 from whoami means "not logged in" or "session expired".
-        // This is an expected state, not necessarily an application error.
         if (response.status === 401 || response.status === 403) {
-          setProfile(null); // User is not authenticated, clear profile
-          setError(null);   // Don't treat "not logged in" as a fetch error
+          setProfile(null);
+          setError(null);
           console.warn(`User is unauthorized (status ${response.status}). No active session cookie or session is invalid.`);
         } else {
           // For other HTTP errors (e.g., 500), it's a genuine error.
@@ -98,22 +96,18 @@ export const ProfileProvider: React.FC<ProfileProviderProps> = ({
     } finally {
       setIsLoading(false);
     }
-  }, []); // WHOAMI_ENDPOINT is a constant, no need to list as dependency
+  }, []);
 
   const clearProfile = useCallback(() => {
     setProfile(null);
     setError(null);
-    setIsLoading(false); // If profile is cleared, no active loading state.
-    // Note: This client-side clearProfile does not clear the HTTP cookie.
-    // That should be handled by a /logout API endpoint.
+    setIsLoading(false); 
   }, []);
 
   useEffect(() => {
     if (fetchOnMount) {
       fetchProfile();
     }
-    // If fetchOnMount is false, profile fetch is deferred until fetchProfile() is manually called.
-    // isLoading would have been initialized to 'false' in this case.
   }, [fetchProfile, fetchOnMount]);
 
   const isAuthenticated = !!profile && Object.keys(profile).length > 0;

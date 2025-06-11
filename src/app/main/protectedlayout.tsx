@@ -1,4 +1,3 @@
-// app/main/ProtectedLayout.tsx
 'use client';
 
 import React, { useEffect } from 'react';
@@ -14,14 +13,15 @@ const ProtectedLayout: React.FC<ProtectedLayoutProps> = ({ children }) => {
   const router = useRouter();
 
   useEffect(() => {
-
     if (isLoading) {
       return;
     }
+
     if (!isAuthenticated) {
-      console.log('ProtectedLayout: User not authenticated, redirecting to /googleauth');
+      console.log('ProtectedLayout: User not authenticated (or error), redirecting to /googleauth');
       router.replace('/googleauth');
     }
+
   }, [isAuthenticated, isLoading, router, error]);
 
   if (isLoading) {
@@ -32,14 +32,13 @@ const ProtectedLayout: React.FC<ProtectedLayoutProps> = ({ children }) => {
     );
   }
 
-
   if (isAuthenticated) {
     return <>{children}</>;
   }
 
   return (
     <div className="flex justify-center items-center min-h-screen">
-      <div>Verifying authentication...</div>
+      <div>Verifying authentication and preparing redirect...</div>
     </div>
   );
 };
