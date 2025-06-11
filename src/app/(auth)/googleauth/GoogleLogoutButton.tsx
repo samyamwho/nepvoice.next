@@ -1,11 +1,10 @@
 'use client';
 
-import { JSX, useState } // React type no longer needed for CSSProperties in newer React/TS
-from 'react';
+import { JSX, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 
-interface GoogleLogoutButtonProps { // Renamed interface to match component
+interface GoogleLogoutButtonProps {
   onLogoutSuccess?: () => void;
   redirectPath?: string;
   buttonText?: string;
@@ -14,9 +13,9 @@ interface GoogleLogoutButtonProps { // Renamed interface to match component
 
 const GOOGLE_LOGOUT_ENDPOINT: string | undefined = process.env.NEXT_PUBLIC_GOOGLE_LOGOUT_ENDPOINT;
 
-export default function GoogleLogoutButton({ // Renamed function
+export default function GoogleLogoutButton({
   onLogoutSuccess,
-  redirectPath = '/', // Default redirect is back to login page
+  redirectPath = '/', // Default redirect to home/login page
   buttonText = 'Logout',
   loadingText = 'Logging out...'
 }: GoogleLogoutButtonProps): JSX.Element {
@@ -33,7 +32,7 @@ export default function GoogleLogoutButton({ // Renamed function
 
     setIsLoading(true);
     setError(null);
-    console.log("Attempting to logout via endpoint:", GOOGLE_LOGOUT_ENDPOINT); // Debug log
+    console.log("Attempting logout via endpoint:", GOOGLE_LOGOUT_ENDPOINT);
 
     try {
       const response: Response = await fetch(GOOGLE_LOGOUT_ENDPOINT, {
@@ -41,31 +40,41 @@ export default function GoogleLogoutButton({ // Renamed function
         headers: {
           'Accept': 'application/json',
         },
-        credentials: 'include',
+        credentials: 'include', // Ensure cookies are sent
       });
 
-      console.log("Logout API response status:", response.status); // Debug log
+      console.log("Logout API response status:", response.status);
 
       if (response.ok) {
+        // Clear all client-side state
+        localStorage.clear(); // Clear all localStorage (adjust if only specific keys needed)
+        sessionStorage.clear(); // Clear sessionStorage
+        // Clear all cookies
+        document.cookie.split(';').forEach((cookie) => {
+          const name = cookie.split('=')[0].trim();
+          document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/;`;
+        });
+
         try {
           const data: { message: string } = await response.json();
           console.log('Backend logout successful:', data.message);
         } catch (e) {
-          console.log('Backend logout successful, but response body was not standard JSON or was empty.');
+          console.log('Backend logout successful, but response body was not standard JSON or empty.');
         }
 
         if (onLogoutSuccess) {
-          onLogoutSuccess(); // This will now call handleLogoutSuccess in LoginForm
+          onLogoutSuccess();
         }
-        router.push(redirectPath);
-        router.refresh();
+
+        // Force full page reload with cache bypass
+        window.location.href = `${redirectPath}?_=${Date.now()}`; // Add timestamp to prevent caching
       } else {
         let errorDataMessage: string = 'Server error during logout.';
         try {
-            const errorData: any = await response.json();
-            errorDataMessage = errorData.message || errorData.error || JSON.stringify(errorData);
+          const errorData: any = await response.json();
+          errorDataMessage = errorData.message || errorData.error || JSON.stringify(errorData);
         } catch (e) {
-            errorDataMessage = (await response.text()) || `Logout failed with status: ${response.status}`;
+          errorDataMessage = (await response.text()) || `Logout failed with status: ${response.status}`;
         }
         console.error('Logout failed from backend:', response.status, errorDataMessage);
         setError(errorDataMessage);
@@ -86,7 +95,7 @@ export default function GoogleLogoutButton({ // Renamed function
     borderRadius: '4px',
     cursor: isLoading ? 'not-allowed' : 'pointer',
     fontSize: '16px',
-    width: '100%', // Make it full width like typical login buttons
+    width: '100%',
   };
 
   return (
@@ -95,7 +104,7 @@ export default function GoogleLogoutButton({ // Renamed function
         onClick={handleLogout}
         disabled={isLoading}
         style={buttonStyle}
-        type="button" // Good practice for buttons not submitting forms
+        type="button"
       >
         {isLoading ? loadingText : buttonText}
       </button>

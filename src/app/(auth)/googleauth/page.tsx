@@ -16,34 +16,34 @@ const LoginForm = () => {
     () => searchParams.get('auth_success') === 'true'
   );
 
-  useEffect(() => {
-    const authSuccess = searchParams.get('auth_success');
-    const token = searchParams.get('token');
-    const error = searchParams.get('error');
-    const errorDescription = searchParams.get('error_description');
+  // useEffect(() => {
+  //   const authSuccess = searchParams.get('auth_success');
+  //   const token = searchParams.get('token');
+  //   const error = searchParams.get('error');
+  //   const errorDescription = searchParams.get('error_description');
 
-    const shouldBeVerifyingCurrent = authSuccess === 'true';
-    if (shouldBeVerifyingCurrent !== isVerifyingSession) {
-      setIsVerifyingSession(shouldBeVerifyingCurrent);
-    }
+  //   const shouldBeVerifyingCurrent = authSuccess === 'true';
+  //   if (shouldBeVerifyingCurrent !== isVerifyingSession) {
+  //     setIsVerifyingSession(shouldBeVerifyingCurrent);
+  //   }
 
-    if (authSuccess === 'true') {
-      if (token) {
-        localStorage.setItem('authToken', token);
-      }
-      router.replace('/dashboard');
-    } else if (error) {
-      console.error(`LoginForm useEffect: OAuth Error. Error: ${error}, Description: ${errorDescription}`);
-      router.replace(pathname, { shallow: true });
-      if (isVerifyingSession) {
-        setIsVerifyingSession(false);
-      }
-    } else {
-      if (isVerifyingSession) {
-        setIsVerifyingSession(false);
-      }
-    }
-  }, [router, searchParams, pathname, isVerifyingSession]);
+  //   if (authSuccess === 'true') {
+  //     if (token) {
+  //       localStorage.setItem('authToken', token);
+  //     }
+  //     router.replace('/dashboard');
+  //   } else if (error) {
+  //     console.error(`LoginForm useEffect: OAuth Error. Error: ${error}, Description: ${errorDescription}`);
+  //     router.replace(pathname, { shallow: true });
+  //     if (isVerifyingSession) {
+  //       setIsVerifyingSession(false);
+  //     }
+  //   } else {
+  //     if (isVerifyingSession) {
+  //       setIsVerifyingSession(false);
+  //     }
+  //   }
+  // }, [router, searchParams, pathname, isVerifyingSession]);
 
   if (isVerifyingSession) {
     return (

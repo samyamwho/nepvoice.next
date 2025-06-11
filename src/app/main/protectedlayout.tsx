@@ -9,7 +9,7 @@ interface ProtectedLayoutProps {
 }
 
 const ProtectedLayout: React.FC<ProtectedLayoutProps> = ({ children }) => {
-  const { isAuthenticated, isLoading, error } = useProfile();
+  const { isAuthenticated, isLoading, error, fetchProfile } = useProfile();
   const router = useRouter();
 
   useEffect(() => {
@@ -21,8 +21,25 @@ const ProtectedLayout: React.FC<ProtectedLayoutProps> = ({ children }) => {
       console.log('ProtectedLayout: User not authenticated (or error), redirecting to /googleauth');
       router.replace('/googleauth');
     }
-
   }, [isAuthenticated, isLoading, router, error]);
+
+  // Re-validate authentication when the component becomes visible
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden && !isLoading) {
+        fetchProfile();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+  
+    window.addEventListener('focus', handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleVisibilityChange);
+    };
+  }, [fetchProfile, isLoading]);
 
   if (isLoading) {
     return (
