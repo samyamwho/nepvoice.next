@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import Image from 'next/image';
-import { useProfile } from '@/auth/CurrentProfile'; // Adjust path if necessary
+import { useProfile } from '@/app/(auth)/CurrentProfile'; // Adjust path if necessary
 
 interface NavbarProps {
     pricingRef: React.RefObject<HTMLDivElement>;
@@ -46,7 +46,7 @@ const Navbar: React.FC<NavbarProps> = ({ pricingRef }) => {
         if (isAuthenticated) {
             router.push('/main/dashboard');
         } else {
-            router.push('/auth/googleauth');
+            router.replace('/googleauth')
         }
     };
 

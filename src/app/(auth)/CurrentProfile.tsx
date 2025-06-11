@@ -31,11 +31,16 @@ const ProfileContext = createContext<ProfileContextType | undefined>(undefined);
 
 interface ProfileProviderProps {
   children: ReactNode;
+  fetchOnMount?: boolean; // Controls if fetchProfile runs on initial mount
 }
 
-export const ProfileProvider: React.FC<ProfileProviderProps> = ({ children }) => {
+export const ProfileProvider: React.FC<ProfileProviderProps> = ({
+  children,
+  fetchOnMount = true, // Default to true: try to fetch profile when provider mounts
+}) => {
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  // isLoading is true initially only if we are attempting to fetch on mount.
+  const [isLoading, setIsLoading] = useState<boolean>(fetchOnMount);
   const [error, setError] = useState<string | null>(null);
 
   const fetchProfile = useCallback(async () => {
@@ -56,7 +61,9 @@ export const ProfileProvider: React.FC<ProfileProviderProps> = ({ children }) =>
         headers: {
           'Accept': 'application/json',
         },
-        credentials: 'include', // Needed if using cookies
+        // Crucial for cookie-based authentication:
+        // Tells the browser to send any cookies associated with the WHOAMI_ENDPOINT's domain.
+        credentials: 'include',
       });
 
       if (!response.ok) {
@@ -68,16 +75,21 @@ export const ProfileProvider: React.FC<ProfileProviderProps> = ({ children }) =>
           // Fallback if response body isn't JSON
         }
 
+        // For cookie-based auth, 401/403 from whoami means "not logged in" or "session expired".
+        // This is an expected state, not necessarily an application error.
         if (response.status === 401 || response.status === 403) {
-          setProfile(null);
-          console.warn('User is unauthorized or forbidden. Clearing profile.');
+          setProfile(null); // User is not authenticated, clear profile
+          setError(null);   // Don't treat "not logged in" as a fetch error
+          console.warn(`User is unauthorized (status ${response.status}). No active session cookie or session is invalid.`);
         } else {
+          // For other HTTP errors (e.g., 500), it's a genuine error.
           throw new Error(errorMessage);
         }
       } else {
+        // Successful response means a valid session cookie was likely sent and validated by the server.
         const data: Profile = await response.json();
         setProfile(data);
-        console.info("Fetched profile:", data);
+        console.info("Fetched profile (likely due to valid session cookie):", data);
       }
     } catch (err: any) {
       console.error("Failed to fetch profile from", WHOAMI_ENDPOINT, err);
@@ -86,16 +98,23 @@ export const ProfileProvider: React.FC<ProfileProviderProps> = ({ children }) =>
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, []); // WHOAMI_ENDPOINT is a constant, no need to list as dependency
 
   const clearProfile = useCallback(() => {
     setProfile(null);
     setError(null);
+    setIsLoading(false); // If profile is cleared, no active loading state.
+    // Note: This client-side clearProfile does not clear the HTTP cookie.
+    // That should be handled by a /logout API endpoint.
   }, []);
 
   useEffect(() => {
-    fetchProfile();
-  }, [fetchProfile]);
+    if (fetchOnMount) {
+      fetchProfile();
+    }
+    // If fetchOnMount is false, profile fetch is deferred until fetchProfile() is manually called.
+    // isLoading would have been initialized to 'false' in this case.
+  }, [fetchProfile, fetchOnMount]);
 
   const isAuthenticated = !!profile && Object.keys(profile).length > 0;
 

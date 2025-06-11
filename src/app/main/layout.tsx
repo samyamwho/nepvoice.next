@@ -18,12 +18,10 @@ export default function RootLayout({
   return (
     <AudioProvider>
       <div className="flex min-h-screen">
-        <ProtectedLayout>
           <Sidebar /> 
           <main className="flex-1">
             {children}
           </main>
-        </ProtectedLayout>
       </div>
     </AudioProvider>
   );

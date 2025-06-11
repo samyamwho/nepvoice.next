@@ -10,7 +10,7 @@ import PricingPage from '@/components/compage/PricingPage';
 import AudioAIPlatform from '@/components/compage/Trial';
 import FeaturedAgentsSlider from '@/components/shared/FeaturedAgent';
 import TypingText from '@/components/shared/TypingText';
-import { useProfile } from '@/auth/CurrentProfile';
+import { useProfile } from '@/app/(auth)/CurrentProfile';
 
 const Divider: React.FC<{ text: string }> = ({ text }) => (
   <div className="flex items-center justify-center">
@@ -60,7 +60,7 @@ export default function Home() {
     if (isAuthenticated) {
       router.push('/main/dashboard');
     } else {
-      router.push('/auth/googleauth');
+      router.replace('/googleauth')
     }
   };
 

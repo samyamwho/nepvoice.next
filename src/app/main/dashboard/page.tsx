@@ -14,7 +14,7 @@ import {
   Play,
   Download,
 } from "lucide-react";
-import { useProfile } from '@/auth/CurrentProfile';
+import { useProfile } from '@/app/(auth)/CurrentProfile';
 
 
 const LANGUAGES = [

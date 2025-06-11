@@ -3,7 +3,7 @@
 
 import React, { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useProfile } from '@/auth/CurrentProfile';
+import { useProfile } from '@/app/(auth)/CurrentProfile';
 
 interface ProtectedLayoutProps {
   children: React.ReactNode;
@@ -19,8 +19,8 @@ const ProtectedLayout: React.FC<ProtectedLayoutProps> = ({ children }) => {
       return;
     }
     if (!isAuthenticated) {
-      console.log('ProtectedLayout: User not authenticated, redirecting to /auth/googleauth');
-      router.replace('/auth/googleauth');
+      console.log('ProtectedLayout: User not authenticated, redirecting to /googleauth');
+      router.replace('/googleauth');
     }
   }, [isAuthenticated, isLoading, router, error]);
 

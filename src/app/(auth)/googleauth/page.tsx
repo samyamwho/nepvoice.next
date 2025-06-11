@@ -134,7 +134,7 @@ const LoginForm = () => {
               />
             </div>
             <p className="text-sm font-light text-black">
-              Do not have an account? <Link href="/main/googleauth" className="font-medium hover:underline">Sign up</Link>
+              Do not have an account? <Link href="/googleauth" className="font-medium hover:underline">Sign up</Link>
             </p>
           </div>
         </div>

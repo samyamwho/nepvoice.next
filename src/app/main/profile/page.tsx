@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation'; // Replace useLocation// Adjust path as needed
 import { ChevronRight, Info, Sun, KeyRound, User, Link2, Upload } from 'lucide-react';
-import { useProfile } from '@/auth/CurrentProfile'; // Adjust path as needed
+import { useProfile } from '@/app/(auth)/CurrentProfile'; // Adjust path as needed
 
 const Settings = () => {
   const [activeTab, setActiveTab] = useState('profile');
