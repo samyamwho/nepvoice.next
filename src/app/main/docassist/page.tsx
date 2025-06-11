@@ -6,8 +6,7 @@ import dynamic from 'next/dynamic';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
-// Dynamic imports for client-side only components
-// const Sidebar = dynamic(() => import('@/components/shared/Sidebar'), { ssr: false }); // Sidebar import removed
+
 const RightPanel = dynamic(() => import('./rightpanel'), { ssr: false });
 const PdfPopup = dynamic(() => import('./pdfpopup'), { ssr: false });
 const DocDashboard = dynamic(() => import('./docdashboard/page'), { ssr: false });
@@ -59,9 +58,9 @@ class FetchError extends Error {
 }
 
 export default function DocAssist() {
-  // Environment variables with fallbacks
-  const UPLOAD_FILE_ENDPOINT = process.env.NEXT_PUBLIC_UPLOAD_FILE_ENDPOINT || '/api/upload';
-  const CHATBOT_ENDPOINT = process.env.NEXT_PUBLIC_CHATBOT_ENDPOINT || '/api/chat';
+  
+  const UPLOAD_FILE_ENDPOINT = process.env.NEXT_PUBLIC_PDF_ENDPOINT;
+  const CHATBOT_ENDPOINT = process.env.NEXT_PUBLIC_CHATBOT_ENDPOINT;
 
   const [inputMessage, setInputMessage] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
@@ -222,7 +221,7 @@ export default function DocAssist() {
 
     try {
       const response = await fetch(
-        `${CHATBOT_ENDPOINT}/chat?query=${encodeURIComponent(userMessageContent)}`,
+        `${CHATBOT_ENDPOINT}?query=${encodeURIComponent(userMessageContent)}`,
         {
           method: 'GET',
           credentials: 'include',
@@ -293,7 +292,7 @@ export default function DocAssist() {
     setLoading(true);
     try {
       const response = await fetch(
-        `${CHATBOT_ENDPOINT}/pdf?pdf_id=${pdfId}`,
+        `${UPLOAD_FILE_ENDPOINT}?pdf_id=${pdfId}`,
         {
           method: 'GET',
           credentials: 'include',
@@ -368,7 +367,7 @@ export default function DocAssist() {
 
     try {
       const response = await fetch(
-        `${CHATBOT_ENDPOINT}/chat?query=${encodeURIComponent(pdfChatInput)}${pdfId ? `&pdf_id=${pdfId}` : ''}`,
+        `${CHATBOT_ENDPOINT}?query=${encodeURIComponent(pdfChatInput)}${pdfId ? `&pdf_id=${pdfId}` : ''}`,
         {
           method: 'GET',
           credentials: 'include'
@@ -430,7 +429,7 @@ export default function DocAssist() {
                 }
               }}
             >
-              <img src="/pdf.png" alt="PDF Icon" className="w-4 h-4 object-contain" />
+              <img src="/assets/pdf.png" alt="PDF Icon" className="w-4 h-4 object-contain" />
               <div>
                 <div className="font-medium text-[10px] text-gray-800 truncate max-w-[120px]">
                   PDF #{doc.pdf_id} (Page {doc.chunk[0]?.page_number || 'N/A'})

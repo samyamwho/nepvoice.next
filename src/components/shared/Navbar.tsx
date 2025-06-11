@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import Image from 'next/image';
+import { useProfile } from '@/auth/CurrentProfile'; // Adjust path if necessary
 
 interface NavbarProps {
     pricingRef: React.RefObject<HTMLDivElement>;
@@ -11,8 +12,10 @@ const Navbar: React.FC<NavbarProps> = ({ pricingRef }) => {
     const router = useRouter();
     const pathname = usePathname();
     const [isScrolled, setIsScrolled] = useState(false);
-    const [_isDropdownOpen, setIsDropdownOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
+
+    // Use the ProfileContext
+    const { isAuthenticated, isLoading: isProfileLoading } = useProfile();
 
     useEffect(() => {
         const handleScroll = () => {
@@ -35,6 +38,15 @@ const Navbar: React.FC<NavbarProps> = ({ pricingRef }) => {
     const handleScrollToPricing = () => {
         if (pricingRef.current) {
             pricingRef.current.scrollIntoView({ behavior: 'smooth' });
+        }
+    };
+
+    const handleGetAppClick = () => {
+        if (isProfileLoading) return; // Optionally, disable button or show loader
+        if (isAuthenticated) {
+            router.push('/main/dashboard');
+        } else {
+            router.push('/auth/googleauth');
         }
     };
 
@@ -71,11 +83,12 @@ const Navbar: React.FC<NavbarProps> = ({ pricingRef }) => {
 
                 {/* Right: Get App & Profile Dropdown */}
                 <div className="flex items-center gap-6">
-                    <button 
-                        className="bg-[#000000] text-white hover:bg-opacity-90 px-4 py-2 rounded-lg text-sm font-medium border border-white"
-                        onClick={() => router.push('/main/dashboard')}
+                    <button
+                        className="bg-[#000000] text-white hover:bg-opacity-90 px-4 py-2 rounded-lg text-sm font-medium border border-white disabled:opacity-50"
+                        onClick={handleGetAppClick}
+                        disabled={isProfileLoading} // Optionally disable while loading
                     >
-                        Get the App
+                        {isProfileLoading ? "Loading..." : "Get the App"}
                     </button>
                 </div>
             </div>

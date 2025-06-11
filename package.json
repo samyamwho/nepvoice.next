@@ -12,6 +12,7 @@
     "@pdf-highlight/react-pdf-highlight": "^1.2.4",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "form-data": "^4.0.3",
     "framer-motion": "^12.16.0",
     "lucide-react": "^0.512.0",
     "next": "15.3.3",

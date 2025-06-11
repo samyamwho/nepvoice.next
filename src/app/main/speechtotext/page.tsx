@@ -2,11 +2,11 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import Image from "next/image";
-import { Download, Mic, FileAudio, Square, Play, Trash2, ChevronRight, BarChart2 } from "lucide-react";
+import { Download, Mic, FileAudio, Square, Play, Trash2, ChevronRight, BarChart2} from "lucide-react";
 import { useAudio } from '@/components/context/AudioContext';
 import Globalplayer from '@/components/shared/Globalplayer';
 import { toast } from 'react-toastify';
-// import SpeechDashboard from "./speechdashboard"; 
+// import SpeechDashboard from "./speechdashboard";
 
 
 interface Language {
@@ -139,7 +139,7 @@ const AudioTranscriberPage = (): React.ReactElement => {
     const file = event.target.files?.[0];
     if (file) {
       if (file.type.startsWith("audio/")) {
-        deleteRecording(); 
+        deleteRecording();
         const url = URL.createObjectURL(file);
         setAudioUrl(url);
         setAudioBlob(file);
@@ -205,10 +205,11 @@ const AudioTranscriberPage = (): React.ReactElement => {
         method: 'POST',
         body: formData,
         signal: controller.signal,
-        referrerPolicy: "unsafe-url",
+        referrerPolicy: "no-referrer",
         headers: {
           'Accept': 'application/json',
         },
+        credentials: 'include',
       });
 
       clearTimeout(timeoutId);
@@ -267,7 +268,7 @@ const AudioTranscriberPage = (): React.ReactElement => {
     } catch (error: any) {
       setIsUploading(false);
       let errorMessage = "Failed to generate transcription: ";
-      
+
       if (error.name === 'AbortError') {
         errorMessage += "Request timed out.";
       } else if (error.message.includes("Failed to fetch") || error.message.includes("NetworkError")) {
@@ -283,7 +284,7 @@ const AudioTranscriberPage = (): React.ReactElement => {
         errorMessage += `${error.message || "Unknown error"}`;
         console.error("Generic Transcription Error Details:", error);
       }
-      
+
       toast.error(errorMessage, { autoClose: 10000 });
     } finally {
       setIsProcessing(false);
@@ -378,7 +379,7 @@ const AudioTranscriberPage = (): React.ReactElement => {
         </header>
 
         {showDashboard ? (
-          // <SpeechDashboard /> 
+          // <SpeechDashboard />
           // Note: Uncomment the import at the top and ensure SpeechDashboard component exists
           <div className="flex-1 flex items-center justify-center p-8">
             <div className="text-center bg-gray-50 rounded-lg p-12 border-2 border-dashed border-gray-300">
@@ -806,7 +807,7 @@ const AudioTranscriberPage = (): React.ReactElement => {
                             value={settings.language}
                             onChange={(e) => {
                                 setSettings({ ...settings, language: e.target.value });
-                                setSelectedLang(e.target.value); 
+                                setSelectedLang(e.target.value);
                                 toast.info(`Default language set to ${LANGUAGES.find(l => l.code === e.target.value)?.name}`);
                             }}
                           >

@@ -3,7 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { AudioProvider } from "@/components/context/AudioContext";
 import 'reactflow/dist/style.css';
-import { ProfileProvider } from "@/components/Auth/CurrentProfile";
+import { ProfileProvider } from "@/auth/CurrentProfile";
 
 const inter = Inter({
   subsets: ["latin"],

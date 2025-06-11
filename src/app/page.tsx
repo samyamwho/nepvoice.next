@@ -10,6 +10,7 @@ import PricingPage from '@/components/compage/PricingPage';
 import AudioAIPlatform from '@/components/compage/Trial';
 import FeaturedAgentsSlider from '@/components/shared/FeaturedAgent';
 import TypingText from '@/components/shared/TypingText';
+import { useProfile } from '@/auth/CurrentProfile';
 
 const Divider: React.FC<{ text: string }> = ({ text }) => (
   <div className="flex items-center justify-center">
@@ -26,12 +27,14 @@ export default function Home() {
   const [isChatbotOpen, setIsChatbotOpen] = useState(false);
   const [showChatButtonAnimation, setShowChatButtonAnimation] = useState(false);
 
+  // Use the ProfileContext
+  const { isAuthenticated, isLoading: isProfileLoading } = useProfile();
+
   useEffect(() => {
     document.documentElement.style.scrollBehavior = 'smooth';
 
     const observer = new IntersectionObserver(
       () => {
-        // No-op
       },
       { threshold: 0.2 }
     );
@@ -50,6 +53,15 @@ export default function Home() {
   const toggleChatbot = () => {
     setIsChatbotOpen(!isChatbotOpen);
     if (!isChatbotOpen) setShowChatButtonAnimation(false);
+  };
+
+  const handleGetStartedClick = () => {
+    if (isProfileLoading) return; // Optionally, disable button or show loader
+    if (isAuthenticated) {
+      router.push('/main/dashboard');
+    } else {
+      router.push('/auth/googleauth');
+    }
   };
 
   return (
@@ -76,10 +88,11 @@ export default function Home() {
 
             <div className="cta mt-10">
               <button
-                onClick={() => router.push('/main/googleauth')}
-                className="px-6 py-2 text-lg md:text-xl font-medium text-white bg-black rounded-md hover:bg-[#323e45] transition-all duration-300"
+                onClick={handleGetStartedClick}
+                disabled={isProfileLoading} // Optionally disable while loading
+                className="px-6 py-2 text-lg md:text-xl font-medium text-white bg-black rounded-md hover:bg-[#323e45] transition-all duration-300 disabled:opacity-50"
               >
-                Get Started
+                {isProfileLoading ? "Loading..." : "Get Started"}
               </button>
             </div>
           </div>
@@ -118,7 +131,7 @@ export default function Home() {
           )}
         </div>
       </button>
-{/* 
+{/*
       {isChatbotOpen && <Chatbot onClose={toggleChatbot} />} */}
 
       <Footer />
