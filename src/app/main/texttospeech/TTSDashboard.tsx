@@ -6,7 +6,6 @@ import TTSDetailsPopup from './TTSDetailsPopup'; // Import the separated popup
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
 import { useAudio } from '@/components/context/AudioContext';
 
-// Define and export types for TTS Log entries
 export interface TTSLogEntryDetails {
   agent: string;
   transcript: string;

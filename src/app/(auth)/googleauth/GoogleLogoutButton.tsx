@@ -1,8 +1,6 @@
 'use client';
 
 import { JSX, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 import { useProfile } from '@/app/(auth)/CurrentProfile'; // Import the profile hook
 
 interface GoogleLogoutButtonProps {
@@ -12,7 +10,7 @@ interface GoogleLogoutButtonProps {
   loadingText?: string;
 }
 
-const GOOGLE_LOGOUT_ENDPOINT: string | undefined = process.env.NEXT_PUBLIC_GOOGLE_LOGOUT_ENDPOINT;
+const GOOGLE_LOGOUT_ENDPOINT = process.env.NEXT_PUBLIC_GOOGLE_LOGOUT_ENDPOINT;
 
 export default function GoogleLogoutButton({
   onLogoutSuccess,
@@ -20,7 +18,6 @@ export default function GoogleLogoutButton({
   buttonText = 'Logout',
   loadingText = 'Logging out...'
 }: GoogleLogoutButtonProps): JSX.Element {
-  // const router: AppRouterInstance = useRouter();
   const { clearProfile } = useProfile(); // Get clearProfile from context
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -42,16 +39,15 @@ export default function GoogleLogoutButton({
         headers: {
           'Accept': 'application/json',
         },
-        credentials: 'include', // Ensure cookies are sent
+        credentials: 'include', 
       });
 
       console.log("Logout API response status:", response.status);
 
       if (response.ok) {
-        // Clear all client-side state
-        localStorage.clear(); // Clear all localStorage (adjust if only specific keys needed)
-        sessionStorage.clear(); // Clear sessionStorage
-        // Clear all cookies
+        localStorage.clear();
+        sessionStorage.clear();
+
         document.cookie.split(';').forEach((cookie) => {
           const name = cookie.split('=')[0].trim();
           document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/;`;
@@ -64,15 +60,12 @@ export default function GoogleLogoutButton({
           console.log('Backend logout successful, but response body was not standard JSON or empty.');
         }
 
-        // Clear the client-side profile state BEFORE calling callbacks or redirecting
         clearProfile();
         
         if (onLogoutSuccess) {
           onLogoutSuccess();
         }
         
-        // Force a hard navigation to ensure middleware re-runs
-        // This is necessary because Next.js middleware doesn't run on client-side navigation
         window.location.href = redirectPath;
       } else {
         let errorDataMessage: string = 'Server error during logout.';

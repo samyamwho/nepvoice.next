@@ -15,7 +15,7 @@ import { useProfile } from '@/app/(auth)/CurrentProfile';
 const Divider: React.FC<{ text: string }> = ({ text }) => (
   <div className="flex items-center justify-center">
     <div className="h-[2px] w-1/4 bg-gray-300"></div>
-    <span className="mx-4 text-lg font-semibold text-gray-600 uppercase font-[Avenir]">{text}</span>
+    <span className="mx-4 text-lg font-semibold text-gray-600 uppercase">{text}</span>
     <div className="h-[2px] w-1/4 bg-gray-300"></div>
   </div>
 );
