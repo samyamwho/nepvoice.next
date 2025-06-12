@@ -80,7 +80,7 @@ const playgroundFeatureCards = [
 
 
 const Dashboard = () => {
-  const { profile, loading: profileLoading, error: profileError } = useProfile();
+  const { profile } = useProfile();
 
   const [historyItems] = useState(initialHistoryData);
   const [favorites, setFavorites] = useState<string[]>(
@@ -118,8 +118,7 @@ const Dashboard = () => {
   };
 
   const getDisplayName = () => {
-    if (profileLoading) return "USER";
-    if (profileError || !profile?.name) return "USER";
+    if (!profile?.name) return "USER";
     return profile.name;
   };
 

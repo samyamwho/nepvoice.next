@@ -76,6 +76,7 @@ export default function DocAssist() {
   const [pdfChatInput, setPdfChatInput] = useState('');
   const [pdfChatLoading, setPdfChatLoading] = useState(false);
   const [referencePdfs, setReferencePdfs] = useState<Message['documents']>([]);
+  
 
   // Add dashboard state
   const [showDashboard, setShowDashboard] = useState(false);
@@ -152,6 +153,12 @@ export default function DocAssist() {
     setLoading(true);
     const formData = new FormData();
     filesToProcess.forEach(file => formData.append('files', file));
+    
+    if (!UPLOAD_FILE_ENDPOINT) {
+        showToast('PDF upload endpoint is not configured.', 'error');
+        setLoading(false);
+        return;
+      }
 
     try {
       const response = await fetch(UPLOAD_FILE_ENDPOINT, {
@@ -672,8 +679,8 @@ export default function DocAssist() {
       {/* Dashboard Overlay */}
       {showDashboard && (
         <DocDashboard
-          isOpen={showDashboard}
-          onClose={() => setShowDashboard(false)}
+          // isOpen={showDashboard}
+          // onClose={() => setShowDashboard(false)}
         />
       )}
     </>

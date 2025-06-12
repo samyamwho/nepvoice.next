@@ -8,6 +8,7 @@ import 'reactflow/dist/style.css';
 import FlowDataExporter from './flowchart/FlowDataExporter';
 import FlowChatComp from './flowchart/FlowChatComp';
 
+
 import {
   addEdge,
   useNodesState,
@@ -82,8 +83,9 @@ export default function AudioDashboard() {
   const [showFlowchartModal, setShowFlowchartModal] = useState(false);
   const [activeFlowchartTab, setActiveFlowchartTab] = useState<FlowchartTab>('exporter');
 
-  const [nodes, setNodes, onNodesChange] = useNodesState<NodeData>(initialNodesRaw);
-  const [edges, setEdges, onEdgesChange] = useEdgesState<FlowEdge>([]);
+const [nodes, setNodes, onNodesChange] = useNodesState<NodeData>(initialNodesRaw);
+const [edges, setEdges, onEdgesChange] = useEdgesState<FlowEdge>([]);
+
 
   useEffect(() => {
     synchronizeIdCounterWithNodes(initialNodesRaw);
@@ -96,7 +98,7 @@ export default function AudioDashboard() {
         ...params,
         id: newEdgeId,
         markerEnd: { type: MarkerType.ArrowClosed },
-        data: { linkInfo: '' }
+        data: { link_info: '' }
       };
       setEdges((eds) => addEdge(newEdge, eds));
     },
@@ -108,7 +110,7 @@ export default function AudioDashboard() {
     const validEdges = data.edges.filter(e => e.id && e.source && e.target)
                               .map(edge => ({
                                 ...edge,
-                                data: edge.data ? { linkInfo: edge.data.linkInfo || '', ...edge.data } : { linkInfo: '' }
+                                data: edge.data ? { link_info: edge.data.link_info || '', ...edge.data } : { link_info: '' }
                               }));
 
     setNodes(validNodes);

@@ -434,7 +434,11 @@ const AudioTranscriberPage = (): React.ReactElement => {
                         className="bg-black text-white rounded-full p-2 md:p-3 shadow-lg hover:bg-gray-800 transition-colors flex items-center justify-center min-w-[44px] min-h-[44px] mr-2"
                         onClick={() => {
                           if (audioUrl) {
-                            playAudio(audioUrl, { title: 'Local Recording', speaker: selectedLanguage?.name || 'User', createdAt: new Date().toLocaleDateString() });
+                            playAudio(audioUrl, {
+                              title: 'Local Recording', speaker: selectedLanguage?.name || 'User', createdAt: new Date().toLocaleDateString(),
+                              id: "",
+                              audioUrl: ""
+                            });
                           }
                         }}
                         aria-label="Send to Player"
@@ -824,14 +828,17 @@ const AudioTranscriberPage = (): React.ReactElement => {
             if (globalIsPlaying) {
               pauseAudio();
             } else {
-              playAudio(globalAudioUrl, globalTrackInfo || { title: 'Audio Playback', speaker: 'System' });
+              playAudio(globalAudioUrl, {
+                              title: 'Local Recording', speaker: selectedLanguage?.name || 'User', createdAt: new Date().toLocaleDateString(),
+                              id: "",
+                              audioUrl: ""
+                            });
             }
           }
         }}
         onVolumeChange={() => { /* Placeholder */ }}
         onForward={() => { /* Placeholder */ }}
         onBackward={() => { /* Placeholder */ }}
-        trackInfo={globalTrackInfo || { title: 'No track loaded', speaker: '' }}
         onSeek={(percentage: number) => {
             if (duration > 0) {
                 seekAudio((percentage / 100) * duration);

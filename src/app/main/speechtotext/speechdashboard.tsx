@@ -526,7 +526,6 @@ export default function STTDashboard() {
         <STTDetailsPopup // Renamed component
           logEntry={selectedLog} // Renamed prop
           onClose={() => setSelectedLog(null)}
-          onPlayAudio={handlePlayAudio}
         />
       )}
     </div>

@@ -605,7 +605,7 @@ const TextToSpeech: React.FC = () => {
         onPlayPause={() => {
           if (audioUrl) {
             if (isPlaying) pauseAudio();
-            else playAudio(audioUrl, trackInfo);
+            else playAudio(audioUrl, trackInfo ?? undefined);
           } else if (inputText.trim()) {
             handleGenerate(); // Generate if no audio loaded but text is present
           } else {
