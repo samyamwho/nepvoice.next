@@ -6,7 +6,7 @@ import { Download, Mic, FileAudio, Square, Play, Trash2, ChevronRight, BarChart2
 import { useAudio } from '@/components/context/AudioContext';
 import Globalplayer from '@/components/shared/Globalplayer';
 import { toast } from 'react-toastify';
-// import SpeechDashboard from "./speechdashboard";
+import SpeechDashboard from "./speechdashboard"; // <--- UNCOMMENTED THIS LINE
 
 
 interface Language {
@@ -379,19 +379,7 @@ const AudioTranscriberPage = (): React.ReactElement => {
         </header>
 
         {showDashboard ? (
-          // <SpeechDashboard />
-          // Note: Uncomment the import at the top and ensure SpeechDashboard component exists
-          <div className="flex-1 flex items-center justify-center p-8">
-            <div className="text-center bg-gray-50 rounded-lg p-12 border-2 border-dashed border-gray-300">
-              <BarChart2 className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-gray-600 mb-2">Speech Analytics Dashboard</h3>
-              <p className="text-gray-500">
-                Analytics dashboard will be displayed here.
-                <br />
-                <span className="text-sm">Uncomment SpeechDashboard import to enable this feature.</span>
-              </p>
-            </div>
-          </div>
+          <SpeechDashboard /> // <--- REPLACED PLACEHOLDER WITH SpeechDashboard
         ) : (
           <div className="flex-1 flex flex-col md:flex-row w-full mt-4 md:mt-0">
             <div

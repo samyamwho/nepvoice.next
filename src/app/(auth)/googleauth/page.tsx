@@ -66,7 +66,7 @@ const LoginForm = () => {
       </div>
 
       <div className="w-5xl flex flex-col items-center justify-center px-6 py-8 mx-auto md:h-screen lg:py-0 relative z-10">
-        <Link href="/" className="flex items-center mb-6 text-2xl font-normal text-black font-[Avenir]">
+        <Link href="/" className="flex items-center mb-6 text-2xl font-normal text-black">
           <Image
             src="/assets/NepVoice.png"
             alt="logo"

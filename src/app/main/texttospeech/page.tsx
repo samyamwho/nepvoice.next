@@ -7,7 +7,7 @@ import Globalplayer from "@/components/shared/Globalplayer";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useAudio } from "@/components/context/AudioContext";
-// import TTSDashboard from "./TTSDashboard"; // Commented out as per request
+import TTSDashboard from "./TTSDashboard";
 
 // Define interfaces for our data structures
 interface Language {
@@ -85,7 +85,7 @@ const TextToSpeech: React.FC = () => {
   const [favorites, setFavorites] = useState<HistoryItem[]>([]);
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [activeTab, setActiveTab] = useState<"settings" | "history">("settings");
-  // const [showDashboard, setShowDashboard] = useState<boolean>(false); // Commented out as per request
+  const [showDashboard, setShowDashboard] = useState<boolean>(false);
 
   // Refs
   const languageDropdownRef = useRef<HTMLDivElement>(null);
@@ -104,12 +104,9 @@ const TextToSpeech: React.FC = () => {
     return `${minutes}:${seconds}`;
   }, [speed]);
 
-  // Handler functions - moved all useCallback functions before JSX
-  /* // Commented out as per request
   const handleToggleDashboard = useCallback(() => {
     setShowDashboard(prev => !prev);
   }, []);
-  */
 
   const handleTextChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const text = e.target.value;
@@ -272,8 +269,7 @@ const TextToSpeech: React.FC = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // JSX Structure
-  return (
+   return (
     <div className="relative flex flex-col md:flex-row h-screen w-full overflow-hidden bg-white">
       <ToastContainer
         position="top-right"
@@ -309,20 +305,19 @@ const TextToSpeech: React.FC = () => {
             </div>
             <button
               className="px-3 py-2 md:px-4 md:py-2 text-sm md:text-base font-medium bg-black text-white rounded-lg hover:from-gray-800 hover:to-black transition-all duration-300 flex items-center gap-2 shadow-md hover:shadow-lg"
-              // onClick={handleToggleDashboard} // Commented out as per request
+              onClick={handleToggleDashboard}
             >
               <LayoutDashboard className="h-4 w-4 md:h-5 md:w-5" />
-              {/* {showDashboard ? "Back to TTS" : "Dashboard"} */}
-              Dashboard {/* Changed as showDashboard is effectively false */}
+              {showDashboard ? "Back to TTS" : "Dashboard"}
             </button>
           </div>
         </div>
 
-        {/* {showDashboard ? ( // Commented out as per request
+        {showDashboard ? ( 
           <div className="flex-1 w-full h-full overflow-y-auto">
             <TTSDashboard />
           </div>
-        ) : ( */}
+        ) : (
           <div className="flex-1 flex flex-col md:flex-row w-full p-4 md:p-0">
             {/* Left Section: Text Input */}
             <div className="flex-1 md:flex-[2] flex flex-col items-start justify-start z-10 w-full md:p-6">
@@ -600,7 +595,7 @@ const TextToSpeech: React.FC = () => {
               </div>
             </div>
           </div>
-        {/* )} // Commented out as per request */}
+        )}
       </div>
       <Globalplayer
         isPlaying={isPlaying}
