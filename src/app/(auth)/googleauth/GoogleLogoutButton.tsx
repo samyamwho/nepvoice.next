@@ -3,6 +3,7 @@
 import { JSX, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
+import { useProfile } from '@/app/(auth)/CurrentProfile'; // Import the profile hook
 
 interface GoogleLogoutButtonProps {
   onLogoutSuccess?: () => void;
@@ -15,11 +16,12 @@ const GOOGLE_LOGOUT_ENDPOINT: string | undefined = process.env.NEXT_PUBLIC_GOOGL
 
 export default function GoogleLogoutButton({
   onLogoutSuccess,
-  redirectPath = '/', // Default redirect to home/login page
+  redirectPath = '/googleauth',
   buttonText = 'Logout',
   loadingText = 'Logging out...'
 }: GoogleLogoutButtonProps): JSX.Element {
-  const router: AppRouterInstance = useRouter();
+  // const router: AppRouterInstance = useRouter();
+  const { clearProfile } = useProfile(); // Get clearProfile from context
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -32,7 +34,7 @@ export default function GoogleLogoutButton({
 
     setIsLoading(true);
     setError(null);
-    console.log("Attempting logout via endpoint:", GOOGLE_LOGOUT_ENDPOINT);
+    console.log("Attempting to logout via endpoint:", GOOGLE_LOGOUT_ENDPOINT);
 
     try {
       const response: Response = await fetch(GOOGLE_LOGOUT_ENDPOINT, {
@@ -62,12 +64,16 @@ export default function GoogleLogoutButton({
           console.log('Backend logout successful, but response body was not standard JSON or empty.');
         }
 
+        // Clear the client-side profile state BEFORE calling callbacks or redirecting
+        clearProfile();
+        
         if (onLogoutSuccess) {
           onLogoutSuccess();
         }
-
-        // Force full page reload with cache bypass
-        window.location.href = `${redirectPath}?_=${Date.now()}`; // Add timestamp to prevent caching
+        
+        // Force a hard navigation to ensure middleware re-runs
+        // This is necessary because Next.js middleware doesn't run on client-side navigation
+        window.location.href = redirectPath;
       } else {
         let errorDataMessage: string = 'Server error during logout.';
         try {

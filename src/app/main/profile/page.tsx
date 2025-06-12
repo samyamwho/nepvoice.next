@@ -8,8 +8,16 @@ import { useProfile } from '@/app/(auth)/CurrentProfile'; // Adjust path as need
 const Settings = () => {
   const [activeTab, setActiveTab] = useState('profile');
   const searchParams = useSearchParams(); // Use Next.js search params for tab state
-  const { profile, loading: profileLoading, error: profileError } = useProfile();
+  const { profile, isLoading : profileLoading ,  error: profileError } = useProfile();
   const [profileImage, setProfileImage] = useState<string | null>(null);
+    
+  const getDisplayName = () => {
+    if (profileLoading) return "USER";
+    if (profileError || !profile?.name) return "USER";
+    return profile.name;
+  };
+
+
 
   // Handle activeTab from query parameters
   useEffect(() => {
@@ -51,10 +59,10 @@ const Settings = () => {
         <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
           <User className="h-5 w-5 text-gray-600" /> Profile
         </h3>
-        {/* Profile Image Section */}
-        <div className="mb-6">
-          <h4 className="font-medium text-gray-700 mb-3">Profile Picture</h4>
-          <div className="flex items-center gap-4">
+        {/* Profile Info Section: Username & Profile Picture stacked */}
+        <div className="mb-6 flex flex-col items-start gap-6">
+          {/* Profile Picture & Upload */}
+          <div className="flex flex-col items-start">
             <div className="relative w-24 h-24 rounded-full overflow-hidden bg-gray-100">
               {profileImage ? (
                 <img
@@ -68,24 +76,24 @@ const Settings = () => {
                 </div>
               )}
             </div>
-            <div className="flex-1">
-              <label className="cursor-pointer">
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageUpload}
-                  className="hidden"
-                />
-                <div className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-800">
-                  <Upload className="w-4 h-4" />
-                  <span>Upload new picture</span>
-                </div>
-              </label>
-              <p className="text-xs text-gray-500 mt-1">
-                Recommended: Square image, at least 200x200px
-              </p>
-            </div>
+            <label className="cursor-pointer mt-2">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleImageUpload}
+                className="hidden"
+              />
+              <div className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-800">
+                <Upload className="w-4 h-4" />
+                <span>Upload new picture</span>
+              </div>
+            </label>
+            <p className="text-xs text-gray-500 mt-1 text-center">
+              Recommended: Square image, at least 200x200px
+            </p>
           </div>
+            <div className="text-xl font-semibold text-gray-900">{getDisplayName()}</div>
+
         </div>
         <div className="mb-4">
           <h4 className="font-medium text-gray-700">E-Mail Address</h4>

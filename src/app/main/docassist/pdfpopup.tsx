@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Send } from 'lucide-react';
+import { Send, X } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { HighlightItem } from './pdfviewer';
 
@@ -125,7 +125,7 @@ const PdfPopup: React.FC<PdfPopupProps> = ({
   
   return (
     <div
-      className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[90] flex items-center justify-center p-4"
+      className="fixed inset-0 bg-black/20 backdrop-blur-sm z-[90] flex items-center justify-center p-4"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
@@ -137,9 +137,7 @@ const PdfPopup: React.FC<PdfPopupProps> = ({
           className="absolute top-4 right-4 z-10 bg-white rounded-full p-2 shadow-md hover:bg-gray-100 transition-colors"
           aria-label="Close PDF viewer"
         >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-          </svg>
+          <X size={20} className="text-gray-600" />
         </button>
 
         {/* Left Panel - PDF Viewer (60%) */}
