@@ -222,67 +222,84 @@ const PDFView: React.FC<PDFViewProps> = ({
             );
           })}
         </div>
-
-        {/* Bottom controls bar */}
-        {currentPdfUrlInternal && (
-          <div className="w-full bg-white flex items-center justify-between py-2 px-4 gap-3 border-t border-gray-200">
-            {/* Highlights navigation */}
-            {pagesWithHighlights.length > 0 && (
-              <div className="flex items-center gap-2 overflow-hidden">
-                <div className="flex items-center gap-2 bg-gray-100 rounded-full px-3 py-1.5">
-                  <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
-                  <span className="text-xs font-medium text-gray-700">Highlights:</span>
-                </div>
-                <div className="flex gap-1.5 overflow-x-auto" style={{ maxWidth: 'calc(100% - 200px)'}}>
-                  {pagesWithHighlights.map((page) => (
-                    <button
-                      key={`highlight-nav-${page}`}
-                      onClick={() => scrollToHighlight(page)}
-                      className={`flex-shrink-0 px-2.5 py-1 rounded-full text-xs font-medium transition-all duration-150 ${
-                        activeHighlight === page
-                          ? "bg-blue-600 text-white shadow-md scale-105"
-                          : "bg-gray-200 hover:bg-gray-300 text-gray-700 hover:scale-105"
-                      }`}
-                    >
-                      P{page}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-            {pagesWithHighlights.length === 0 && <div className="flex-1"></div>}
-
-            {/* Zoom controls */}
-            <div className="flex items-center gap-2 bg-gray-100 rounded-full px-3 py-1.5">
-              <button
-                onClick={handleZoomOut}
-                className="p-1.5 hover:bg-gray-300 rounded-full transition-colors text-gray-600 hover:text-black disabled:opacity-50"
-                title="Zoom out"
-                disabled={scale <= 0.5}
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
-                </svg>
-              </button>
-              <span className="text-xs font-medium text-gray-700 w-10 text-center">
-                {Math.round(scale * 100)}%
-              </span>
-              <button
-                onClick={handleZoomIn}
-                className="p-1.5 hover:bg-gray-300 rounded-full transition-colors text-gray-600 hover:text-black disabled:opacity-50"
-                title="Zoom in"
-                disabled={scale >= 2.0}
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                </svg>
-              </button>
-            </div>
-          </div>
-        )}
       </div>
+{/* Bottom controls bar */}
+{currentPdfUrlInternal && (
+  <div className="w-full bg-white flex items-center justify-between py-2 px-4 gap-3 border-t border-gray-200">
+    {/* Highlights navigation */}
+    {pagesWithHighlights.length > 0 && (
+      <div className="flex items-center gap-2 overflow-hidden">
+        <div className="flex items-center gap-2 bg-gray-100 rounded-full px-3 py-1.5">
+          <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+          <span className="text-xs font-medium text-gray-700">Highlights:</span>
+        </div>
+        <div className="flex gap-1.5 overflow-x-auto" style={{ maxWidth: 'calc(100% - 200px)'}}>
+          {pagesWithHighlights.map((page) => (
+            <button
+              key={`highlight-nav-${page}`}
+              onClick={() => scrollToHighlight(page)}
+              className={`flex-shrink-0 px-2.5 py-1 rounded-full text-xs font-medium transition-all duration-150 ${
+                activeHighlight === page
+                  ? "bg-blue-600 text-white shadow-md scale-105"
+                  : "bg-gray-200 hover:bg-gray-300 text-gray-700 hover:scale-105"
+              }`}
+            >
+              P{page}
+            </button>
+          ))}
+        </div>
+      </div>
+    )}
+
+    {/* Clickable spacer when no highlights */}
+    {pagesWithHighlights.length === 0 && (
+      <button
+        onClick={() => {
+          console.log("No highlights available area clicked. Implement an action here.");
+          // For example, you could show a modal, an alert, or navigate to a help section.
+          // alert("There are no highlights yet. Select text to create one, or click here to learn more.");
+        }}
+        className="flex-1 text-left px-1 py-1 text-xs text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-1 focus:ring-blue-500 rounded"
+        aria-label="Action or information when no highlights are present"
+        title="No highlights available. Click for more info." // Optional: adds a native tooltip
+      >
+        {/* You can leave this empty for a purely visual spacer that's clickable, */}
+        {/* or add subtle text.   ensures it has some content for layout. */}
+        {/* Example text: "No highlights yet." */}
+         
+      </button>
+    )}
+
+    {/* Zoom controls */}
+    <div className="flex items-center gap-2 bg-gray-100 rounded-full px-3 py-1.5 ml-auto"> {/* Added ml-auto here to ensure zoom is pushed right if highlights are present */}
+      <button
+        onClick={handleZoomOut}
+        className="p-1.5 hover:bg-gray-300 rounded-full transition-colors text-gray-600 hover:text-black disabled:opacity-50"
+        title="Zoom out"
+        disabled={scale <= 0.5}
+      >
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
+        </svg>
+      </button>
+      <span className="text-xs font-medium text-gray-700 w-10 text-center">
+        {Math.round(scale * 100)}%
+      </span>
+      <button
+        onClick={handleZoomIn}
+        className="p-1.5 hover:bg-gray-300 rounded-full transition-colors text-gray-600 hover:text-black disabled:opacity-50"
+        title="Zoom in"
+        disabled={scale >= 2.0}
+      >
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+        </svg>
+      </button>
+    </div>
+  </div>
+)}
 
       <style jsx>{`
         .pdf-scrollbar::-webkit-scrollbar {

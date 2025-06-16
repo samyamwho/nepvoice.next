@@ -38,7 +38,7 @@ interface PDFNavigationItem {
 interface PdfPopupProps {
   show: boolean;
   onClose: () => void;
-  currentPdfData: PDFNavigationItem | null;
+  currentPdfData: PDFNavigationItem;
   pdfNavigationList: PDFNavigationItem[];
   currentPdfIndex: number;
   handlePreviousPdf: () => void;

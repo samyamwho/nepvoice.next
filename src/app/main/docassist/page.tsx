@@ -438,7 +438,7 @@ export default function DocAssist() {
                 }
               }}
             >
-              <Image src="/assets/pdf.png" alt="PDF Icon" className="w-4 h-4 object-contain" />
+              <Image src="/assets/pdf.png" alt="PDF Icon" className="w-4 h-4 object-contain" width={4} height={4} />
               <div>
                 <div className="font-medium text-[10px] text-gray-800 truncate max-w-[120px]">
                   PDF #{doc.pdf_id} (Page {doc.chunk[0]?.page_number || 'N/A'})
