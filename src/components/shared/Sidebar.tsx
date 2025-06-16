@@ -32,7 +32,7 @@ const Sidebar = () => {
   const [userMenuExpanded, setUserMenuExpanded] = useState(false);
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const router = useRouter();
-  const { profile, loading: profileLoading, error: profileError } = useProfile();
+  const { profile } = useProfile();
 
   useEffect(() => {
     const handleResize = () => {
@@ -62,8 +62,7 @@ const Sidebar = () => {
   const toggleMobileMenu = () => setMobileOpen(!mobileOpen);
 
   const getDisplayName = () => {
-    if (profileLoading) return "USER";
-    if (profileError || !profile?.name) return "USER";
+    if (!profile?.name) return "USER";
     return profile.name;
   };
 

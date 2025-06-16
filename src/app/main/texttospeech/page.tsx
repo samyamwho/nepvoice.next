@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 'use client';
 
 import { useState, useRef, useEffect, useCallback } from "react";
@@ -9,12 +10,12 @@ import "react-toastify/dist/ReactToastify.css";
 import { useAudio } from "@/components/context/AudioContext";
 import TTSDashboard from "./TTSDashboard";
 
-// Define interfaces for our data structures
+
 interface Language {
   code: string;
   name: string;
   flag: string;
-  language: string; // This is the value sent to the API
+  language: string;
 }
 
 interface VoiceOption {
@@ -166,7 +167,7 @@ const TextToSpeech: React.FC = () => {
       return;
     }
 
-    let apiUrl = `${ttsEndpoint}?text=${encodeURIComponent(textToConvert)}&lang=${encodeURIComponent(apiLang)}`;
+    const apiUrl = `${ttsEndpoint}?text=${encodeURIComponent(textToConvert)}&lang=${encodeURIComponent(apiLang)}`;
     
     console.log("Fetching TTS from:", apiUrl);
 

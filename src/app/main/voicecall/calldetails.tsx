@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState } from 'react';
+import { CallLog } from "./types";
+
 // Lucide icons (X, Play, Pause, Volume2) are removed as per request.
 // If you need textual representations, you'll add them directly in the JSX.
 
@@ -29,6 +31,7 @@ interface CallData {
 }
 
 interface CallDetailsProps {
+  call: CallLog;
   onClose: () => void;
   // callData: CallData; 
 }

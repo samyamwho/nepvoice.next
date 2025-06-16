@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation'; // Replace useLocation// Adjust path as needed
 import { ChevronRight, Info, Sun, KeyRound, User, Link2, Upload } from 'lucide-react';
 import { useProfile } from '@/app/(auth)/CurrentProfile'; // Adjust path as needed
+import Image from 'next/image';
 
 const Settings = () => {
   const [activeTab, setActiveTab] = useState('profile');
@@ -65,7 +66,7 @@ const Settings = () => {
           <div className="flex flex-col items-start">
             <div className="relative w-24 h-24 rounded-full overflow-hidden bg-gray-100">
               {profileImage ? (
-                <img
+                <Image
                   src={profileImage}
                   alt="Profile"
                   className="w-full h-full object-cover"
@@ -176,7 +177,7 @@ const Settings = () => {
         </div>
         <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-4">
           <p className="font-medium text-gray-700">No Webhooks Configured</p>
-          <p className="text-gray-500 text-sm">You have not configured any webhooks yet. Click "Create Webhook" to add one.</p>
+          <p className="text-gray-500 text-sm">You have not configured any webhooks yet. Click CREATE WEBHOOK to add one.</p>
         </div>
         <div className="mb-4">
           <h4 className="font-medium text-gray-700">Webhooks Events</h4>

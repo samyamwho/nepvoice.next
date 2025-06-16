@@ -1,18 +1,16 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter, useSearchParams, usePathname } from 'next/navigation';
+import { useState} from 'react';
+import { useSearchParams} from 'next/navigation';
 import Link from 'next/link';
 import GoogleLoginButton from './GoogleLoginButton';
 import GoogleLogoutButton from './GoogleLogoutButton';
 import Image from 'next/image';
 
 const LoginForm = () => {
-  const router = useRouter();
   const searchParams = useSearchParams();
-  const pathname = usePathname();
 
-  const [isVerifyingSession, setIsVerifyingSession] = useState(
+  const [isVerifyingSession] = useState(
     () => searchParams.get('auth_success') === 'true'
   );
 

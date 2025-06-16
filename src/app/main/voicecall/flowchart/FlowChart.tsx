@@ -28,7 +28,8 @@ export interface NodeData {
   label: string;
 }
 export type FlowNode = Node<NodeData>;
-export type FlowEdge = Edge<{ link_info?: string; linkInfo?: string }>; // Ensure linkInfo is also accepted for backward compatibility during import
+export type FlowEdgeData = { link_info?: string; linkInfo?: string };
+export type FlowEdge = Edge<FlowEdgeData>; // For convenience
 
 const nodeTypes: NodeTypes = {
   start: StartNode,
@@ -355,7 +356,7 @@ type FlowchartTab = 'exporter' | 'chat';
 
 const FlowchartEditorModal: React.FC<FlowchartEditorModalProps> = ({ isOpen, onClose }) => {
   const [nodes, setNodes, onNodesChange] = useNodesState<NodeData>(initialNodesRaw);
-  const [edges, setEdges, onEdgesChange] = useEdgesState<FlowEdge>([]);
+  const [edges, setEdges, onEdgesChange] = useEdgesState<FlowEdgeData>([]);
   const [activeFlowchartTab, setActiveFlowchartTab] = useState<FlowchartTab>('exporter');
 
   // Effect to synchronize localIdCounter when component mounts or initialNodesRaw changes
@@ -371,25 +372,27 @@ const FlowchartEditorModal: React.FC<FlowchartEditorModalProps> = ({ isOpen, onC
         ...params,
         id: newEdgeId,
         markerEnd: { type: MarkerType.ArrowClosed },
-        data: { link_info: '' } // Changed from linkInfo to link_info to match FlowDataExporter expectation
+        data: { link_info: '' },
+        source: params.source ?? '',
+        target: params.target ?? '',
+        sourceHandle: params.sourceHandle ?? undefined,
+        targetHandle: params.targetHandle ?? undefined,
       };
       setEdges((eds) => addEdge(newEdge, eds));
     },
     [setEdges]
   );
 
-  const handleImportJson = useCallback((data: { nodes: FlowNode[]; edges: FlowEdge[] }) => {
+  const handleImportJson = useCallback((data: { nodes: FlowNode[]; edges: Edge<FlowEdgeData>[] }) => {
     const validNodes = data.nodes.filter(n => n.id && n.position && n.data);
     const validEdges = data.edges.filter(e => e.id && e.source && e.target)
-                              .map(edge => ({
-                                ...edge,
-                                // Ensure data.link_info is preferred as FlowDataExporter exports it like that.
-                                // It also handles old data that might have linkInfo.
-                                data: edge.data ? { link_info: edge.data.link_info || edge.data.linkInfo || '', ...edge.data } : { link_info: '' }
-                              }));
+                            .map(edge => ({
+                              ...edge,
+                              data: edge.data ? { link_info: edge.data.link_info || edge.data.linkInfo || '', ...edge.data } : { link_info: '' }
+                            }));
 
     setNodes(validNodes);
-    setEdges(validEdges as FlowEdge[]); // Cast needed as we are ensuring data structure
+    setEdges(validEdges); // No cast needed
     synchronizeIdCounterWithNodesLocal(validNodes);
   }, [setNodes, setEdges]);
 

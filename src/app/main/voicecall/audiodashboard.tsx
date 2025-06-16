@@ -5,8 +5,9 @@ import { Phone, Clock, Activity,LayoutDashboard} from 'lucide-react';
 import CallDetails from "./calldetails";
 import FlowchartEditorModal from './flowchart/FlowChart';
 import 'reactflow/dist/style.css';
+import { CallLog } from "./types";
 
-const mockCallLogs = [
+const mockCallLogs: CallLog[] = [
   { id: 1, name: "John Doe", number: "+977 9841234567", bank: "Global IME", schedule: "5 min", status: "Completed", timestamp: "2024-03-20 14:30", duration: "3:45", details: { callType: "Outbound", agent: "AI Assistant", transcript: "Hello, this is a test call from Global IME. How can I assist you today?", notes: "Customer was interested in our new savings account.", recordingUrl: "https://example.com/recording1.mp3"} },
   { id: 2, name: "Jane Smith", number: "+977 9851234567", bank: "Nabil Bank", schedule: "10 min", status: "In Progress", timestamp: "2024-03-20 14:35", duration: "2:15", details: { callType: "Outbound", agent: "AI Assistant", transcript: "Currently in progress...", notes: "Call scheduled for account verification", recordingUrl: "https://example.com/recording2.mp3"} },
   { id: 3, name: "Mike Johnson", number: "+977 9861234567", bank: "WorldLink", schedule: "15 min", status: "Scheduled", timestamp: "2024-03-20 14:40", duration: "-", details: { callType: "Outbound", agent: "AI Assistant", transcript: "Not started yet", notes: "Scheduled for service inquiry", recordingUrl: null} },
@@ -32,10 +33,6 @@ const StatCard: React.FC<StatCardProps> = ({ title, value, icon: Icon, bgColorCl
     </div>
   </div>
 );
-
-interface CallLogDetail { callType: string; agent: string; transcript: string; notes: string; recordingUrl: string | null; }
-interface CallLog { id: number; name: string; number: string; bank: string; schedule: string; status: "Completed" | "In Progress" | "Scheduled" | "Failed"; timestamp: string; duration: string; details: CallLogDetail; }
-
 
 export default function AudioDashboard() {
   const [showCallDetailsModal, setShowCallDetailsModal] = useState(false);

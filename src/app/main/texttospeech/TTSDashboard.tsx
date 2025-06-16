@@ -136,7 +136,7 @@ const StatCard: React.FC<{ title: string; value: string; icon: React.ElementType
 export default function TTSDashboard() {
   const [selectedCall, setSelectedCall] = useState<TTSLogEntry | null>(null);
   const [activeTab, setActiveTab] = useState('analytics');
-  const { playAudio, pauseAudio } = useAudio();
+  const { playAudio } = useAudio();
 
   const handlePlayAudio = (audioUrl: string, title: string) => {
     if (audioUrl) {

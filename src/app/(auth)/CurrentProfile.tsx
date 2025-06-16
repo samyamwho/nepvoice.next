@@ -87,7 +87,11 @@ export const ProfileProvider: React.FC<ProfileProviderProps> = ({
       }
     } catch (err) {
       console.error("Failed to fetch profile from", WHOAMI_ENDPOINT, err);
-      setError(err.message || 'An unexpected error occurred while fetching profile.');
+      setError(
+        typeof err === 'object' && err !== null && 'message' in err
+          ? String((err as { message?: unknown }).message)
+          : 'An unexpected error occurred while fetching profile.'
+      );
       setProfile(null);
     } finally {
       setIsLoading(false);

@@ -1,12 +1,14 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
 import Image from "next/image";
-import { Download, Mic, FileAudio, Square, Play, Trash2, ChevronRight, BarChart2, LayoutDashboard } from "lucide-react";
+import { Download, Mic, FileAudio, Square, Play, Trash2, ChevronRight, LayoutDashboard } from "lucide-react";
 import { useAudio } from '@/components/context/AudioContext';
 import Globalplayer from '@/components/shared/Globalplayer';
 import { toast } from 'react-toastify';
-import SpeechDashboard from "./speechdashboard"; // <--- UNCOMMENTED THIS LINE
+import SpeechDashboard from "./speechdashboard";
 
 
 interface Language {
