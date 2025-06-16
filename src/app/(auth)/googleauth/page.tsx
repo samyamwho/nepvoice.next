@@ -1,13 +1,14 @@
 'use client';
 
-import { useState} from 'react';
+import { Suspense, useState} from 'react'; // Added Suspense
 import { useSearchParams} from 'next/navigation';
 import Link from 'next/link';
 import GoogleLoginButton from './GoogleLoginButton';
 import GoogleLogoutButton from './GoogleLogoutButton';
 import Image from 'next/image';
 
-const LoginForm = () => {
+// This component contains the original logic and uses useSearchParams
+const LoginFormContent = () => {
   const searchParams = useSearchParams();
 
   const [isVerifyingSession] = useState(
@@ -93,6 +94,15 @@ const LoginForm = () => {
         </div>
       </div>
     </section>
+  );
+};
+
+// The main exported LoginForm component now wraps LoginFormContent with Suspense
+const LoginForm = () => {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><span className="text-black">Loading form...</span></div>}>
+      <LoginFormContent />
+    </Suspense>
   );
 };
 
