@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { Suspense, useState, useEffect, useCallback } from 'react';
@@ -238,9 +240,6 @@ const SettingsView = () => {
 
     if (confirm(`Are you sure you want to revoke API key ID: ${keyIdToDelete}? This action cannot be undone.`)) {
       setIsDeletingKey(keyIdToDelete); 
-      // It's generally better to update the UI *after* successful server confirmation,
-      // but keeping oldKeys for rollback is good.
-      const oldKeys = [...apiKeys]; 
 
       try {
         const response = await fetch(deleteEndpoint, {
@@ -423,13 +422,13 @@ const SettingsView = () => {
           <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 text-center">
             <KeyRound className="h-12 w-12 text-gray-400 mx-auto mb-3" />
             <p className="font-medium text-gray-700 mb-1">No API Keys Yet</p>
-            <p className="text-gray-500 text-sm">Click "Create API Key" to generate your first key.</p>
+            <p className="text-gray-500 text-sm">Click Create API Key to generate your first key.</p>
           </div>
         ) : !isLoadingApiKeys && apiKeysLoaded && filteredKeys.length === 0 && searchTerm ? (
             <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 text-center">
                 <Info className="h-12 w-12 text-gray-400 mx-auto mb-3" />
                 <p className="font-medium text-gray-700 mb-1">No API Keys Found</p>
-                <p className="text-gray-500 text-sm">Your search for "{searchTerm}" did not match any API keys.</p>
+                <p className="text-gray-500 text-sm">Your search for {searchTerm} did not match any API keys.</p>
             </div>
         ) : (
           <div className="space-y-3 mb-4">

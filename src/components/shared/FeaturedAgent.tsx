@@ -16,7 +16,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({ imagesrc, title, subtitle, de
 
   return (
     <div
-      className="service-card bg-white my-5 rounded-xl shadow-lg p-8 transform transition-all duration-500 hover:shadow-xl border-2 border-transparent hover:border-gray-500 font-[Avenir] min-w-[280px] mx-2 cursor-pointer"
+      className="service-card bg-white my-5 rounded-xl shadow-lg p-8 transform transition-all duration-500 hover:shadow-xl border-2 border-transparent hover:border-gray-500 min-w-[280px] mx-2 cursor-pointer"
       onClick={() => router.push(path)}
     >
       <div className="flex flex-col items-center justify-center space-y-6">
