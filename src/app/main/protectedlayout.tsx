@@ -11,20 +11,27 @@ interface ProtectedLayoutProps {
 const ProtectedLayout: React.FC<ProtectedLayoutProps> = ({ children }) => {
   const { isAuthenticated, isLoading, error, fetchProfile } = useProfile();
   const router = useRouter();
+  const skipAuth = process.env.NEXT_PUBLIC_DEV_MODE_SKIP_AUTH === 'true';
 
   useEffect(() => {
+    if (skipAuth) {
+      return;
+    }
+
     if (isLoading) {
       return;
     }
 
     if (!isAuthenticated) {
-      console.log('ProtectedLayout: User not authenticated (or error), redirecting to /googleauth');
       router.replace('/googleauth');
     }
-  }, [isAuthenticated, isLoading, router, error]);
+  }, [isAuthenticated, isLoading, router, error, skipAuth]);
 
-  // Re-validate authentication when the component becomes visible
   useEffect(() => {
+    if (skipAuth) {
+      return;
+    }
+
     const handleVisibilityChange = () => {
       if (!document.hidden && !isLoading) {
         fetchProfile();
@@ -32,14 +39,17 @@ const ProtectedLayout: React.FC<ProtectedLayoutProps> = ({ children }) => {
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
-  
     window.addEventListener('focus', handleVisibilityChange);
 
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('focus', handleVisibilityChange);
     };
-  }, [fetchProfile, isLoading]);
+  }, [fetchProfile, isLoading, skipAuth]);
+
+  if (skipAuth) {
+    return <>{children}</>;
+  }
 
   if (isLoading) {
     return (

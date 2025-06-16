@@ -1,23 +1,10 @@
 "use client";
 
-import React, { useState, useCallback, useEffect } from 'react';
-import { Phone, Clock, Activity, X, LayoutDashboard, Download, MessageSquare } from 'lucide-react';
+import React, { useState} from 'react';
+import { Phone, Clock, Activity, LayoutDashboard } from 'lucide-react';
 import CallDetails from "./calldetails";
-import Flowchart, { FlowNode, FlowEdge, NodeData } from './flowchart/FlowChart';
-import 'reactflow/dist/style.css';
-import FlowDataExporter from './flowchart/FlowDataExporter';
-import FlowChatComp from './flowchart/FlowChatComp';
 
-
-import {
-  addEdge,
-  useNodesState,
-  useEdgesState,
-  Connection,
-  MarkerType,
-} from 'reactflow';
-
-const mockCallLogs = [
+const mockCallLogs: CallLog[] = [
   { id: 1, name: "John Doe", number: "+977 9841234567", bank: "Global IME", schedule: "5 min", status: "Completed", timestamp: "2024-03-20 14:30", duration: "3:45", details: { callType: "Outbound", agent: "AI Assistant", transcript: "Hello, this is a test call from Global IME. How can I assist you today?", notes: "Customer was interested in our new savings account.", recordingUrl: "https://example.com/recording1.mp3"} },
   { id: 2, name: "Jane Smith", number: "+977 9851234567", bank: "Nabil Bank", schedule: "10 min", status: "In Progress", timestamp: "2024-03-20 14:35", duration: "2:15", details: { callType: "Outbound", agent: "AI Assistant", transcript: "Currently in progress...", notes: "Call scheduled for account verification", recordingUrl: "https://example.com/recording2.mp3"} },
   { id: 3, name: "Mike Johnson", number: "+977 9861234567", bank: "WorldLink", schedule: "15 min", status: "Scheduled", timestamp: "2024-03-20 14:40", duration: "-", details: { callType: "Outbound", agent: "AI Assistant", transcript: "Not started yet", notes: "Scheduled for service inquiry", recordingUrl: null} },
@@ -47,76 +34,9 @@ const StatCard: React.FC<StatCardProps> = ({ title, value, icon: Icon, bgColorCl
 interface CallLogDetail { callType: string; agent: string; transcript: string; notes: string; recordingUrl: string | null; }
 interface CallLog { id: number; name: string; number: string; bank: string; schedule: string; status: "Completed" | "In Progress" | "Scheduled" | "Failed"; timestamp: string; duration: string; details: CallLogDetail; }
 
-let idCounter = 1;
-const getNodeId = (): string => `node_${idCounter++}`;
-
-const extractIdNumber = (id: string): number => {
-  if (typeof id === 'string') {
-    const parts = id.split('_');
-    const numPart = parseInt(parts[parts.length - 1], 10);
-    if (!isNaN(numPart)) return numPart;
-  }
-  return 0;
-};
-
-const synchronizeIdCounterWithNodes = (flowNodes: FlowNode[]) => {
-  const highestIdNum = flowNodes.reduce((maxNum, node) => {
-    if (node.id && typeof node.id === 'string' && node.id.startsWith('node_')) {
-      const num = extractIdNumber(node.id);
-      return Math.max(maxNum, num);
-    }
-    return maxNum;
-  }, 0);
-  idCounter = highestIdNum + 1;
-};
-
-const initialNodesRaw: FlowNode[] = [
-  { id: 'node_1', type: 'start', data: { label: 'Start Flow' }, position: { x: 250, y: 50 }, draggable: false, deletable: false },
-  { id: 'node_2', type: 'end', data: { label: 'End Flow' }, position: { x: 250, y: 450 }, draggable: true },
-];
-
-type FlowchartTab = 'exporter' | 'chat';
-
 export default function AudioDashboard() {
   const [showCallDetailsModal, setShowCallDetailsModal] = useState(false);
   const [selectedCall, setSelectedCall] = useState<CallLog | null>(null);
-  const [showFlowchartModal, setShowFlowchartModal] = useState(false);
-  const [activeFlowchartTab, setActiveFlowchartTab] = useState<FlowchartTab>('exporter');
-
-const [nodes, setNodes, onNodesChange] = useNodesState<NodeData>(initialNodesRaw);
-const [edges, setEdges, onEdgesChange] = useEdgesState<FlowEdge>([]);
-
-
-  useEffect(() => {
-    synchronizeIdCounterWithNodes(initialNodesRaw);
-  }, []);
-
-  const onConnect = useCallback(
-    (params: Connection) => {
-      const newEdgeId = `edge_${params.source}_${params.target}_${Date.now()}`;
-      const newEdge: FlowEdge = {
-        ...params,
-        id: newEdgeId,
-        markerEnd: { type: MarkerType.ArrowClosed },
-        data: { link_info: '' }
-      };
-      setEdges((eds) => addEdge(newEdge, eds));
-    },
-    [setEdges]
-  );
-
-  const handleImportJson = useCallback((data: { nodes: FlowNode[]; edges: FlowEdge[] }) => {
-    const validNodes = data.nodes.filter(n => n.id && n.position && n.data);
-    const validEdges = data.edges.filter(e => e.id && e.source && e.target)
-                              .map(edge => ({
-                                ...edge,
-                                data: edge.data ? { link_info: edge.data.link_info || '', ...edge.data } : { link_info: '' }
-                              }));
-
-    setNodes(validNodes);
-    setEdges(validEdges as FlowEdge[]);
-    synchronizeIdCounterWithNodes(validNodes);
-  }, [setNodes, setEdges]);
 
   const handleOpenCallDetails = (log: CallLog) => {
     setSelectedCall(log);
@@ -128,13 +48,6 @@ const [edges, setEdges, onEdgesChange] = useEdgesState<FlowEdge>([]);
     setSelectedCall(null);
   };
 
-  const tabButtonClasses = (isActive: boolean) =>
-    `flex-1 py-2.5 px-3 text-xs font-medium text-center flex items-center justify-center space-x-1.5 transition-all duration-200 ease-in-out focus:outline-none ${
-      isActive
-        ? 'border-b-2 border-indigo-500 text-indigo-600 bg-white shadow-sm'
-        : 'text-gray-500 hover:text-indigo-600 hover:bg-gray-100 border-b border-transparent'
-    }`;
-
   return (
     <div className="flex h-screen bg-gray-100">
       <div className="flex-1 overflow-auto">
@@ -144,8 +57,7 @@ const [edges, setEdges, onEdgesChange] = useEdgesState<FlowEdge>([]);
               <h1 className="text-2xl font-semibold text-gray-800">Audio Dashboard</h1>
               <button
                 onClick={() => {
-                  setShowFlowchartModal(true);
-                  setActiveFlowchartTab('exporter');
+                  console.log("Flowchart Editor button clicked - modal and functionality removed.");
                 }}
                 className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md flex items-center space-x-2 transition-colors duration-300"
               >
@@ -218,66 +130,9 @@ const [edges, setEdges, onEdgesChange] = useEdgesState<FlowEdge>([]);
       </div>
 
       {showCallDetailsModal && selectedCall && (
-        <CallDetails call={selectedCall} onClose={handleCloseCallDetails} />
+        <CallDetails onClose={handleCloseCallDetails} />
       )}
 
-      {showFlowchartModal && (
-        <div className="fixed inset-0 bg-opacity-60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-7xl h-[90vh] flex flex-col overflow-hidden">
-            <div className="p-1 pl-3 border-b flex justify-between items-center bg-gray-50">
-              <h3 className="text-lg font-semibold text-gray-800">Flowchart Editor</h3>
-              <button onClick={() => setShowFlowchartModal(false)} className="text-gray-500 hover:text-gray-800 p-1.5 rounded-full hover:bg-gray-200 transition-colors" aria-label="Close flowchart editor">
-                <X size={24} />
-              </button>
-            </div>
-            <div className="flex flex-grow overflow-hidden">
-              <div className="w-full md:w-2/3 h-full overflow-hidden">
-                <Flowchart
-                  nodes={nodes}
-                  edges={edges}
-                  onNodesChange={onNodesChange}
-                  onEdgesChange={onEdgesChange}
-                  onConnect={onConnect}
-                  setNodes={setNodes}
-                  setEdges={setEdges}
-                  getNodeId={getNodeId}
-                  extractIdNumber={extractIdNumber}
-                />
-              </div>
-              <div className="w-full md:w-1/3 h-full border-l border-gray-200 bg-gray-50 flex flex-col">
-                <div className="flex border-b h-18 border-gray-300 bg-gray-100">
-                  <button
-                    className={tabButtonClasses(activeFlowchartTab === 'exporter')}
-                    onClick={() => setActiveFlowchartTab('exporter')}
-                  >
-                    <Download size={14} />
-                    <span>Data</span>
-                  </button>
-                  <button
-                    className={tabButtonClasses(activeFlowchartTab === 'chat')}
-                    onClick={() => setActiveFlowchartTab('chat')}
-                  >
-                    <MessageSquare size={14} />
-                    <span>Chat</span>
-                  </button>
-                </div>
-                <div className="flex-grow overflow-y-auto p-4">
-                  {activeFlowchartTab === 'exporter' && (
-                    <FlowDataExporter
-                      nodes={nodes}
-                      edges={edges}
-                      onImportJson={handleImportJson}
-                    />
-                  )}
-                  {activeFlowchartTab === 'chat' && (
-                    <FlowChatComp />
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

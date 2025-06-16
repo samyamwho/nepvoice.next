@@ -25,7 +25,7 @@ export default function RootLayout({
     <html lang="en" className={inter.variable}>
       <body className={inter.className}>
         <AudioProvider>
-          <ProfileProvider>
+          <ProfileProvider fetchOnMount={false}>
             {children}
           </ProfileProvider> 
         </AudioProvider>
