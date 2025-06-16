@@ -6,7 +6,6 @@ import ReactFlow, {
   Controls,
   Background,
   MiniMap,
-
   Node,
   Edge,
   Connection,
@@ -14,16 +13,23 @@ import ReactFlow, {
   NodeTypes,
   OnNodesChange,
   OnEdgesChange,
+  addEdge,
+  useNodesState,
+  useEdgesState,
+  MarkerType,
 } from 'reactflow';
 import StartNode from './StartNode';
 import EndNode from './EndNode';
+import FlowDataExporter from './FlowDataExporter';
+import FlowChatComp from './FlowChatComp';
+import { X, Download, MessageSquare } from 'lucide-react'; // Added icons used in modal
 
 export interface NodeData {
   label: string;
 }
 export type FlowNode = Node<NodeData>;
-
-export type FlowEdge = Edge<{ link_info?: string }>;
+export type FlowEdgeData = { link_info?: string; linkInfo?: string };
+export type FlowEdge = Edge<FlowEdgeData>; // For convenience
 
 const nodeTypes: NodeTypes = {
   start: StartNode,
@@ -55,6 +61,39 @@ const checkWouldCreateCycle = (
   return false;
 };
 
+// --- Helper functions moved from audiodashboard.tsx ---
+let localIdCounter = 1;
+const getNextNodeIdLocal = (): string => `node_${localIdCounter++}`;
+
+const extractIdNumberLocal = (id: string): number => {
+  if (typeof id === 'string') {
+    const parts = id.split('_');
+    const numPart = parseInt(parts[parts.length - 1], 10);
+    if (!isNaN(numPart)) return numPart;
+  }
+  return 0; // Return 0 or throw error, depending on desired behavior for malformed IDs
+};
+
+const synchronizeIdCounterWithNodesLocal = (flowNodes: FlowNode[]) => {
+  const highestIdNum = flowNodes.reduce((maxNum, node) => {
+    if (node.id && typeof node.id === 'string' && node.id.startsWith('node_')) {
+      const num = extractIdNumberLocal(node.id);
+      return Math.max(maxNum, num);
+    }
+    return maxNum;
+  }, 0);
+  localIdCounter = highestIdNum + 1;
+};
+
+const initialNodesRaw: FlowNode[] = [
+  { id: 'node_1', type: 'start', data: { label: 'Start Flow' }, position: { x: 250, y: 50 }, draggable: false, deletable: false },
+  { id: 'node_2', type: 'end', data: { label: 'End Flow' }, position: { x: 250, y: 450 }, draggable: true },
+];
+// Initialize the counter based on initial nodes
+synchronizeIdCounterWithNodesLocal(initialNodesRaw);
+// --- End of helper functions ---
+
+
 interface FlowchartContentProps {
   nodes: FlowNode[];
   edges: FlowEdge[];
@@ -63,8 +102,8 @@ interface FlowchartContentProps {
   onConnect: (connection: Connection) => void;
   setNodes: (updater: FlowNode[] | ((nodes: FlowNode[]) => FlowNode[])) => void;
   setEdges: (updater: FlowEdge[] | ((edges: FlowEdge[]) => FlowEdge[])) => void;
-  getNodeId: () => string;
-  extractIdNumber: (id: string) => number;
+  getNextNodeId: () => string; // Renamed from getNodeId for clarity
+  extractIdNumber: (id: string) => number; // Renamed for clarity
 }
 
 const FlowchartContent: React.FC<FlowchartContentProps> = ({
@@ -75,8 +114,8 @@ const FlowchartContent: React.FC<FlowchartContentProps> = ({
   onConnect,
   setNodes,
   setEdges,
-  getNodeId,
-  extractIdNumber
+  getNextNodeId, // Use the passed prop
+  extractIdNumber // Use the passed prop
 }) => {
   const [newNodeLabelInput, setNewNodeLabelInput] = useState<string>('');
   const [isEditorPopupOpen, setIsEditorPopupOpen] = useState<boolean>(false);
@@ -114,11 +153,11 @@ const FlowchartContent: React.FC<FlowchartContentProps> = ({
   );
 
   const addNodeType = useCallback((type: 'default' | 'end') => {
-    const newNodeId = getNodeId();
+    const newNodeId = getNextNodeId(); // Use prop
     let label = newNodeLabelInput || '';
     if (!label) {
-      if (type === 'end') label = `End Flow ${extractIdNumber(newNodeId)}`;
-      else label = `Node ${extractIdNumber(newNodeId)}`;
+      if (type === 'end') label = `End Flow ${extractIdNumber(newNodeId)}`; // Use prop
+      else label = `Node ${extractIdNumber(newNodeId)}`; // Use prop
     }
     const newNode: FlowNode = {
       id: newNodeId,
@@ -128,7 +167,7 @@ const FlowchartContent: React.FC<FlowchartContentProps> = ({
     };
     setNodes((nds) => nds.concat(newNode));
     setNewNodeLabelInput('');
-  }, [newNodeLabelInput, setNodes, getNodeId, extractIdNumber]);
+  }, [newNodeLabelInput, setNodes, getNextNodeId, extractIdNumber]);
 
   const openEditorPopup = useCallback((type: 'node' | 'edge', element: FlowNode | FlowEdge) => {
     setEditingConfig({ type, element });
@@ -138,7 +177,7 @@ const FlowchartContent: React.FC<FlowchartContentProps> = ({
     } else {
       const edgeElement = element as FlowEdge;
       setPopupInputText(typeof edgeElement.label === 'string' ? edgeElement.label : '');
-      setPopupLinkInfoInput(edgeElement.data?.link_info || '');
+      setPopupLinkInfoInput(edgeElement.data?.link_info || edgeElement.data?.linkInfo || ''); // Check both
     }
     setIsEditorPopupOpen(true);
   }, []);
@@ -228,7 +267,7 @@ const FlowchartContent: React.FC<FlowchartContentProps> = ({
             />
             <button onClick={() => addNodeType('default')} disabled={isEditorPopupOpen} className="px-3 py-1.5 text-sm font-medium text-white bg-blue-500 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 disabled:opacity-50 disabled:cursor-not-allowed">New Node</button>
             <button onClick={() => addNodeType('end')} disabled={isEditorPopupOpen} className="px-3 py-1.5 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-600 focus:ring-opacity-50 disabled:opacity-50 disabled:cursor-not-allowed">End Node</button>
-            <button onClick={handleDeleteSelected} disabled={isEditorPopupOpen} className="px-3 py-1.5 text-sm font-medium text-white bg-red-500 rounded-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50 disabled:opacity-50 disabled:cursor-not-allowed">Delete Node</button>
+            <button onClick={handleDeleteSelected} disabled={isEditorPopupOpen} className="px-3 py-1.5 text-sm font-medium text-white bg-red-500 rounded-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50 disabled:opacity-50 disabled:cursor-not-allowed">Delete Selected</button>
           </div>
         </div>
 
@@ -307,24 +346,124 @@ const FlowchartContent: React.FC<FlowchartContentProps> = ({
   );
 };
 
-interface FlowchartProps {
-  nodes: FlowNode[];
-  edges: FlowEdge[];
-  onNodesChange: OnNodesChange;
-  onEdgesChange: OnEdgesChange;
-  onConnect: (connection: Connection) => void;
-  setNodes: (updater: FlowNode[] | ((nodes: FlowNode[]) => FlowNode[])) => void;
-  setEdges: (updater: FlowEdge[] | ((edges: FlowEdge[]) => FlowEdge[])) => void;
-  getNodeId: () => string;
-  extractIdNumber: (id: string) => number;
+
+interface FlowchartEditorModalProps {
+  isOpen: boolean;
+  onClose: () => void;
 }
 
-const Flowchart: React.FC<FlowchartProps> = (props) => {
+type FlowchartTab = 'exporter' | 'chat';
+
+const FlowchartEditorModal: React.FC<FlowchartEditorModalProps> = ({ isOpen, onClose }) => {
+  const [nodes, setNodes, onNodesChange] = useNodesState<NodeData>(initialNodesRaw);
+  const [edges, setEdges, onEdgesChange] = useEdgesState<FlowEdgeData>([]);
+  const [activeFlowchartTab, setActiveFlowchartTab] = useState<FlowchartTab>('exporter');
+
+  // Effect to synchronize localIdCounter when component mounts or initialNodesRaw changes
+  // This is already done globally once, but if initialNodesRaw were dynamic, this would be important
+  useEffect(() => {
+    synchronizeIdCounterWithNodesLocal(nodes); // Or initialNodesRaw if nodes are reset
+  }, [nodes]); // Or on initialNodesRaw if it can change
+
+  const onConnect = useCallback(
+    (params: Connection) => {
+      const newEdgeId = `edge_${params.source}_${params.target}_${Date.now()}`;
+      const newEdge: FlowEdge = {
+        ...params,
+        id: newEdgeId,
+        markerEnd: { type: MarkerType.ArrowClosed },
+        data: { link_info: '' },
+        source: params.source ?? '',
+        target: params.target ?? '',
+        sourceHandle: params.sourceHandle ?? undefined,
+        targetHandle: params.targetHandle ?? undefined,
+      };
+      setEdges((eds) => addEdge(newEdge, eds));
+    },
+    [setEdges]
+  );
+
+  const handleImportJson = useCallback((data: { nodes: FlowNode[]; edges: Edge<FlowEdgeData>[] }) => {
+    const validNodes = data.nodes.filter(n => n.id && n.position && n.data);
+    const validEdges = data.edges.filter(e => e.id && e.source && e.target)
+                            .map(edge => ({
+                              ...edge,
+                              data: edge.data ? { link_info: edge.data.link_info || edge.data.linkInfo || '', ...edge.data } : { link_info: '' }
+                            }));
+
+    setNodes(validNodes);
+    setEdges(validEdges); // No cast needed
+    synchronizeIdCounterWithNodesLocal(validNodes);
+  }, [setNodes, setEdges]);
+
+  const tabButtonClasses = (isActive: boolean) =>
+    `flex-1 py-2.5 px-3 text-xs font-medium text-center flex items-center justify-center space-x-1.5 transition-all duration-200 ease-in-out focus:outline-none ${
+      isActive
+        ? 'border-b-2 border-indigo-500 text-indigo-600 bg-white shadow-sm'
+        : 'text-gray-500 hover:text-indigo-600 hover:bg-gray-100 border-b border-transparent'
+    }`;
+
+  if (!isOpen) return null;
+
   return (
-    <ReactFlowProvider>
-      <FlowchartContent {...props} />
-    </ReactFlowProvider>
+    <div className="fixed inset-0 bg-opacity-60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-xl shadow-2xl w-full max-w-7xl h-[90vh] flex flex-col overflow-hidden">
+        <div className="p-1 pl-3 border-b flex justify-between items-center bg-gray-50">
+          <h3 className="text-lg font-semibold text-gray-800">Flowchart Editor</h3>
+          <button onClick={onClose} className="text-gray-500 hover:text-gray-800 p-1.5 rounded-full hover:bg-gray-200 transition-colors" aria-label="Close flowchart editor">
+            <X size={24} />
+          </button>
+        </div>
+        <div className="flex flex-grow overflow-hidden">
+          <div className="w-full md:w-2/3 h-full overflow-hidden">
+            <ReactFlowProvider>
+              <FlowchartContent
+                nodes={nodes}
+                edges={edges}
+                onNodesChange={onNodesChange}
+                onEdgesChange={onEdgesChange}
+                onConnect={onConnect}
+                setNodes={setNodes}
+                setEdges={setEdges}
+                getNextNodeId={getNextNodeIdLocal}
+                extractIdNumber={extractIdNumberLocal}
+              />
+            </ReactFlowProvider>
+          </div>
+          <div className="w-full md:w-1/3 h-full border-l border-gray-200 bg-gray-50 flex flex-col">
+            <div className="flex border-b h-18 border-gray-300 bg-gray-100">
+              <button
+                className={tabButtonClasses(activeFlowchartTab === 'exporter')}
+                onClick={() => setActiveFlowchartTab('exporter')}
+              >
+                <Download size={14} />
+                <span>Data</span>
+              </button>
+              <button
+                className={tabButtonClasses(activeFlowchartTab === 'chat')}
+                onClick={() => setActiveFlowchartTab('chat')}
+              >
+                <MessageSquare size={14} />
+                <span>Chat</span>
+              </button>
+            </div>
+            <div className="flex-grow overflow-y-auto"> {/* Removed p-4 here as sub-components have it */}
+              {activeFlowchartTab === 'exporter' && (
+                <FlowDataExporter
+                  nodes={nodes}
+                  edges={edges}
+                  onImportJson={handleImportJson}
+                />
+              )}
+              {activeFlowchartTab === 'chat' && (
+                <FlowChatComp />
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };
 
-export default Flowchart;
+export default FlowchartEditorModal;

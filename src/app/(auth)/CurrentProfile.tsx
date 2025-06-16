@@ -61,8 +61,6 @@ export const ProfileProvider: React.FC<ProfileProviderProps> = ({
         headers: {
           'Accept': 'application/json',
         },
-        // Crucial for cookie-based authentication:
-        // Tells the browser to send any cookies associated with the WHOAMI_ENDPOINT's domain.
         credentials: 'include',
       });
 
@@ -72,7 +70,7 @@ export const ProfileProvider: React.FC<ProfileProviderProps> = ({
           const errorData = await response.json();
           errorMessage = errorData.message || errorData.detail || errorMessage;
         } catch (_) {
-          // Fallback if response body isn't JSON
+          console.warn("Failed to parse error response as JSON:", _);
         }
 
         if (response.status === 401 || response.status === 403) {
@@ -80,18 +78,20 @@ export const ProfileProvider: React.FC<ProfileProviderProps> = ({
           setError(null);
           console.warn(`User is unauthorized (status ${response.status}). No active session cookie or session is invalid.`);
         } else {
-          // For other HTTP errors (e.g., 500), it's a genuine error.
           throw new Error(errorMessage);
         }
       } else {
-        // Successful response means a valid session cookie was likely sent and validated by the server.
         const data: Profile = await response.json();
         setProfile(data);
         console.info("Fetched profile (likely due to valid session cookie):", data);
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error("Failed to fetch profile from", WHOAMI_ENDPOINT, err);
-      setError(err.message || 'An unexpected error occurred while fetching profile.');
+      setError(
+        typeof err === 'object' && err !== null && 'message' in err
+          ? String((err as { message?: unknown }).message)
+          : 'An unexpected error occurred while fetching profile.'
+      );
       setProfile(null);
     } finally {
       setIsLoading(false);

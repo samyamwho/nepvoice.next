@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import Image from 'next/image';
@@ -12,7 +12,7 @@ const Navbar: React.FC<NavbarProps> = ({ pricingRef }) => {
     const router = useRouter();
     const pathname = usePathname();
     const [isScrolled, setIsScrolled] = useState(false);
-    const dropdownRef = useRef<HTMLDivElement>(null);
+    // const dropdownRef = useRef<HTMLDivElement>(null);
 
     // Use the ProfileContext
     const { isAuthenticated, isLoading: isProfileLoading } = useProfile();
@@ -25,15 +25,15 @@ const Navbar: React.FC<NavbarProps> = ({ pricingRef }) => {
         return () => window.removeEventListener('scroll', handleScroll);
     }, [pathname]);
 
-    useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-                setIsDropdownOpen(false);
-            }
-        };
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, []);
+    // useEffect(() => {
+    //     const handleClickOutside = (event: MouseEvent) => {
+    //         if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+    //             setIsDropdownOpen(false);
+    //         }
+    //     };
+    //     document.addEventListener('mousedown', handleClickOutside);
+    //     return () => document.removeEventListener('mousedown', handleClickOutside);
+    // }, []);
 
     const handleScrollToPricing = () => {
         if (pricingRef.current) {

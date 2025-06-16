@@ -6,7 +6,6 @@ import {
   ChevronDown,
   ChevronRight,
   Phone,
-  BarChart2,
   LayoutDashboard,
 } from "lucide-react";
 import { ToastContainer, toast } from "react-toastify";

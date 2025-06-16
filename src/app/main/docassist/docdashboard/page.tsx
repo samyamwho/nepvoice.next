@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { ArrowLeft, BarChart2, Users, FileText, AlertTriangle, Settings, CreditCard, DollarSign, X } from 'lucide-react';
 import { useRouter } from 'next/navigation'; // Changed for Next.js 13+ app router
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer} from 'recharts';
-import dynamic from 'next/dynamic';
+// import dynamic from 'next/dynamic';
 
 // Dynamic import for Sidebar to ensure client-side only rendering
 // const Sidebar = dynamic(() => import('@/components/shared/Sidebar'), { ssr: false });

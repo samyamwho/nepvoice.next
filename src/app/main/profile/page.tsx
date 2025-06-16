@@ -1,35 +1,33 @@
-"use client"; // Mark as a client component
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useSearchParams } from 'next/navigation'; // Replace useLocation// Adjust path as needed
+import { Suspense, useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { ChevronRight, Info, Sun, KeyRound, User, Link2, Upload } from 'lucide-react';
-import { useProfile } from '@/app/(auth)/CurrentProfile'; // Adjust path as needed
+import { useProfile } from '@/app/(auth)/CurrentProfile';
+import Image from 'next/image';
 
-const Settings = () => {
+const SettingsView = () => {
   const [activeTab, setActiveTab] = useState('profile');
-  const searchParams = useSearchParams(); // Use Next.js search params for tab state
-  const { profile, isLoading : profileLoading ,  error: profileError } = useProfile();
+  const searchParams = useSearchParams();
+  const { profile, isLoading: profileLoading, error: profileError } = useProfile();
   const [profileImage, setProfileImage] = useState<string | null>(null);
-    
+
   const getDisplayName = () => {
     if (profileLoading) return "USER";
     if (profileError || !profile?.name) return "USER";
     return profile.name;
   };
 
-
-
-  // Handle activeTab from query parameters
   useEffect(() => {
     const tab = searchParams.get('tab');
     if (tab && ['profile', 'api-keys', 'webhooks'].includes(tab)) {
       setActiveTab(tab);
     }
-
-    // Handle profile image from localStorage
-    const savedImage = localStorage.getItem('profileImage');
-    if (savedImage) {
-      setProfileImage(savedImage);
+    if (typeof window !== 'undefined') {
+      const savedImage = localStorage.getItem('profileImage');
+      if (savedImage) {
+        setProfileImage(savedImage);
+      }
     }
   }, [searchParams]);
 
@@ -44,30 +42,33 @@ const Settings = () => {
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        const imageData = reader.result as string;
-        setProfileImage(imageData);
-        localStorage.setItem('profileImage', imageData);
+        const imageData = reader.result;
+        if (typeof imageData === 'string') {
+          setProfileImage(imageData);
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('profileImage', imageData);
+          }
+        }
       };
       reader.readAsDataURL(file);
     }
   };
 
-  // Tab content components
   const ProfileTab = () => (
     <div className="space-y-6">
       <div className="bg-white rounded-lg p-6 border border-gray-200 shadow-sm">
         <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
           <User className="h-5 w-5 text-gray-600" /> Profile
         </h3>
-        {/* Profile Info Section: Username & Profile Picture stacked */}
         <div className="mb-6 flex flex-col items-start gap-6">
-          {/* Profile Picture & Upload */}
           <div className="flex flex-col items-start">
             <div className="relative w-24 h-24 rounded-full overflow-hidden bg-gray-100">
               {profileImage ? (
-                <img
+                <Image
                   src={profileImage}
                   alt="Profile"
+                  width={96}
+                  height={96}
                   className="w-full h-full object-cover"
                 />
               ) : (
@@ -93,7 +94,6 @@ const Settings = () => {
             </p>
           </div>
             <div className="text-xl font-semibold text-gray-900">{getDisplayName()}</div>
-
         </div>
         <div className="mb-4">
           <h4 className="font-medium text-gray-700">E-Mail Address</h4>
@@ -176,7 +176,7 @@ const Settings = () => {
         </div>
         <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-4">
           <p className="font-medium text-gray-700">No Webhooks Configured</p>
-          <p className="text-gray-500 text-sm">You have not configured any webhooks yet. Click "Create Webhook" to add one.</p>
+          <p className="text-gray-500 text-sm">You have not configured any webhooks yet. Click CREATE WEBHOOK to add one.</p>
         </div>
         <div className="mb-4">
           <h4 className="font-medium text-gray-700">Webhooks Events</h4>
@@ -222,7 +222,7 @@ const Settings = () => {
             <ChevronRight size={16} />
           </div>
           <button className="rounded-full p-2 hover:bg-gray-100 bg-black">
-            <Sun size={18} />
+            <Sun size={18} className="text-white" />
           </button>
         </header>
         <div className="max-w-3xl mx-auto px-4 py-8">
@@ -267,4 +267,16 @@ const Settings = () => {
   );
 };
 
-export default Settings;
+const SettingsPage = () => {
+  return (
+    <Suspense fallback={
+      <div className="flex h-screen bg-gray-50 items-center justify-center">
+        <p className="text-gray-700 text-xl">Loading settings...</p>
+      </div>
+    }>
+      <SettingsView />
+    </Suspense>
+  );
+};
+
+export default SettingsPage;

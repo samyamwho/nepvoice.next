@@ -42,10 +42,6 @@ const PDFView: React.FC<PDFViewProps> = ({
   totalPages: totalPagesProp,
   uploadedFile,
   currentPdfIndex = 0,
-  totalPdfs = 1,
-  onPreviousPdf,
-  onNextPdf,
-  pdfTitle,
 }) => {
   const usedHighlights = useMemo(() => highlights ?? [], [highlights]);
 

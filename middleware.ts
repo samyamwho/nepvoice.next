@@ -2,24 +2,29 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 const WHOAMI_ENDPOINT = process.env.NEXT_PUBLIC_WHOAMI_ENDPOINT;
+const DEV_MODE_SKIP_AUTH = process.env.NEXT_PUBLIC_DEV_MODE_SKIP_AUTH === 'true';
 
 const protectedRoutes = ['/main'];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  
-  const isProtectedRoute = protectedRoutes.some(route => 
+
+  if (DEV_MODE_SKIP_AUTH) {
+    console.log('Middleware: DEV MODE - Skipping authentication check.');
+    return NextResponse.next();
+  }
+
+  const isProtectedRoute = protectedRoutes.some(route =>
     pathname.startsWith(route)
   );
-  
+
   if (!isProtectedRoute) {
     return NextResponse.next();
   }
 
-
   try {
     if (!WHOAMI_ENDPOINT) {
-      console.error('WHOAMI_ENDPOINT not configured');
+      console.error('Middleware: WHOAMI_ENDPOINT not configured');
       return NextResponse.redirect(new URL('/googleauth', request.url));
     }
 
@@ -32,21 +37,19 @@ export async function middleware(request: NextRequest) {
     });
 
     if (!response.ok) {
+      console.log(`Middleware: Auth check failed with status ${response.status}. Redirecting to /googleauth for path: ${pathname}`);
       return NextResponse.redirect(new URL('/googleauth', request.url));
     }
+
     return NextResponse.next();
   } catch (error) {
-    console.error('Authentication check failed:', error);
+    console.error('Middleware: Authentication check failed with error:', error);
     return NextResponse.redirect(new URL('/googleauth', request.url));
   }
 }
 
-// Configure which routes this middleware runs on
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     */
     '/((?!api|_next/static|_next/image|favicon.ico|googleauth).*)',
   ],
 };

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
@@ -5,6 +6,7 @@ import { Send, FileText, ChevronLeft, ChevronRight, Plus, Mic } from 'lucide-rea
 import dynamic from 'next/dynamic';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import Image from 'next/image';
 
 
 const RightPanel = dynamic(() => import('./rightpanel'), { ssr: false });
@@ -79,7 +81,7 @@ export default function DocAssist() {
   
 
   // Add dashboard state
-  const [showDashboard, setShowDashboard] = useState(false);
+  const [showDashboard] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -436,7 +438,7 @@ export default function DocAssist() {
                 }
               }}
             >
-              <img src="/assets/pdf.png" alt="PDF Icon" className="w-4 h-4 object-contain" />
+              <Image src="/assets/pdf.png" alt="PDF Icon" className="w-4 h-4 object-contain" />
               <div>
                 <div className="font-medium text-[10px] text-gray-800 truncate max-w-[120px]">
                   PDF #{doc.pdf_id} (Page {doc.chunk[0]?.page_number || 'N/A'})
