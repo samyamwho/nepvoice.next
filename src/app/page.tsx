@@ -131,9 +131,6 @@ export default function Home() {
           )}
         </div>
       </button>
-{/*
-      {isChatbotOpen && <Chatbot onClose={toggleChatbot} />} */}
-
       <Footer />
     </div>
   );

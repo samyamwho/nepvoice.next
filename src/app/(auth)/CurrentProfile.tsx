@@ -31,15 +31,15 @@ const ProfileContext = createContext<ProfileContextType | undefined>(undefined);
 
 interface ProfileProviderProps {
   children: ReactNode;
-  fetchOnMount?: boolean; // Controls if fetchProfile runs on initial mount
+  fetchOnMount?: boolean;
 }
 
 export const ProfileProvider: React.FC<ProfileProviderProps> = ({
   children,
-  fetchOnMount = true, // Default to true: try to fetch profile when provider mounts
+  fetchOnMount = true,
 }) => {
   const [profile, setProfile] = useState<Profile | null>(null);
-  // isLoading is true initially only if we are attempting to fetch on mount.
+
   const [isLoading, setIsLoading] = useState<boolean>(fetchOnMount);
   const [error, setError] = useState<string | null>(null);
 
@@ -83,7 +83,6 @@ export const ProfileProvider: React.FC<ProfileProviderProps> = ({
       } else {
         const data: Profile = await response.json();
         setProfile(data);
-        console.info("Fetched profile (likely due to valid session cookie):", data);
       }
     } catch (err) {
       console.error("Failed to fetch profile from", WHOAMI_ENDPOINT, err);

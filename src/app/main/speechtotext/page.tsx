@@ -33,8 +33,6 @@ const LANGUAGES: Language[] = [
 
 const ASR_ENDPOINT = process.env.NEXT_PUBLIC_ASR_ENDPOINT as string;
 
-console.log("ASR Endpoint:", ASR_ENDPOINT);
-
 const AudioTranscriberPage = (): React.ReactElement => {
   const [selectedLang, setSelectedLang] = useState<string>(LANGUAGES[0].code);
   const [dropdownOpen, setDropdownOpen] = useState<boolean>(false);
