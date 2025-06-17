@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { AudioProvider } from "@/components/context/AudioContext";
 import 'reactflow/dist/style.css';
 import Sidebar from "@/components/shared/Sidebar";
 import ProtectedLayout from "./protectedlayout";
@@ -16,14 +15,12 @@ export default function RootLayout({
 }>) {
   return (
     <ProtectedLayout> 
-      <AudioProvider>
-        <div className="flex min-h-screen">
-            <Sidebar /> 
-            <main className="flex-1">
-              {children}
-            </main>
-        </div>
-      </AudioProvider>
+      <div className="flex min-h-screen">
+          <Sidebar /> 
+          <main className="flex-1">
+            {children}
+          </main>
+      </div>
     </ProtectedLayout>
   );
 }

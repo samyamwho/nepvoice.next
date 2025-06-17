@@ -4,7 +4,8 @@ import type { NextRequest } from 'next/server';
 const WHOAMI_ENDPOINT = process.env.NEXT_PUBLIC_WHOAMI_ENDPOINT;
 const DEV_MODE_SKIP_AUTH = process.env.NEXT_PUBLIC_DEV_MODE_SKIP_AUTH === 'true';
 
-const protectedRoutes = ['/main'];
+// Remove /main from protected routes - let client handle auth
+const protectedRoutes: string[] = [];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -50,6 +51,6 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    '/((?!api|_next/static|_next/image|favicon.ico|googleauth).*)',
+    '/((?!api|_next/static|_next/image|favicon.ico|googleauth|main).*)',
   ],
 };
