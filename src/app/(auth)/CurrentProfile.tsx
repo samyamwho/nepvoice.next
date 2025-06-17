@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 'use client';
 
 import React, {
@@ -7,6 +8,7 @@ import React, {
   useEffect,
   ReactNode,
   useCallback,
+  useRef,
 } from 'react';
 
 const WHOAMI_ENDPOINT = process.env.NEXT_PUBLIC_WHOAMI_ENDPOINT;
@@ -39,21 +41,32 @@ export const ProfileProvider: React.FC<ProfileProviderProps> = ({
   fetchOnMount = true,
 }) => {
   const [profile, setProfile] = useState<Profile | null>(null);
-
   const [isLoading, setIsLoading] = useState<boolean>(fetchOnMount);
   const [error, setError] = useState<string | null>(null);
+  const fetchInProgress = useRef(false);
+  const mounted = useRef(true);
 
   const fetchProfile = useCallback(async () => {
-    if (!WHOAMI_ENDPOINT) {
-      console.error("ProfileContext: NEXT_PUBLIC_WHOAMI_ENDPOINT is not defined.");
-      setError("Configuration error: WHOAMI endpoint is missing.");
-      setIsLoading(false);
-      setProfile(null);
+    // Prevent concurrent requests
+    if (fetchInProgress.current || !mounted.current) {
       return;
     }
 
-    setIsLoading(true);
-    setError(null);
+    if (!WHOAMI_ENDPOINT) {
+      console.error("ProfileContext: NEXT_PUBLIC_WHOAMI_ENDPOINT is not defined.");
+      if (mounted.current) {
+        setError("Configuration error: WHOAMI endpoint is missing.");
+        setIsLoading(false);
+        setProfile(null);
+      }
+      return;
+    }
+
+    fetchInProgress.current = true;
+    if (mounted.current) {
+      setIsLoading(true);
+      setError(null);
+    }
 
     try {
       const response = await fetch(WHOAMI_ENDPOINT, {
@@ -64,49 +77,65 @@ export const ProfileProvider: React.FC<ProfileProviderProps> = ({
         credentials: 'include',
       });
 
-      if (!response.ok) {
-        let errorMessage = `HTTP error! status: ${response.status}`;
-        try {
-          const errorData = await response.json();
-          errorMessage = errorData.message || errorData.detail || errorMessage;
-        } catch (_) {
-          console.warn("Failed to parse error response as JSON:", _);
-        }
+      if (!mounted.current) return;
 
+      if (!response.ok) {
         if (response.status === 401 || response.status === 403) {
           setProfile(null);
           setError(null);
-          console.warn(`User is unauthorized (status ${response.status}). No active session cookie or session is invalid.`);
+          console.warn(`User is unauthorized (status ${response.status}).`);
         } else {
+          let errorMessage = `HTTP error! status: ${response.status}`;
+          try {
+            const errorData = await response.json();
+            errorMessage = errorData.message || errorData.detail || errorMessage;
+          } catch (_) {
+            // Ignore JSON parse errors
+          }
           throw new Error(errorMessage);
         }
       } else {
         const data: Profile = await response.json();
-        setProfile(data);
+        if (mounted.current) {
+          setProfile(data);
+        }
       }
     } catch (err) {
-      console.error("Failed to fetch profile from", WHOAMI_ENDPOINT, err);
-      setError(
-        typeof err === 'object' && err !== null && 'message' in err
-          ? String((err as { message?: unknown }).message)
-          : 'An unexpected error occurred while fetching profile.'
-      );
-      setProfile(null);
+      console.error("Failed to fetch profile:", err);
+      if (mounted.current) {
+        setError(
+          typeof err === 'object' && err !== null && 'message' in err
+            ? String((err as { message?: unknown }).message)
+            : 'An unexpected error occurred while fetching profile.'
+        );
+        setProfile(null);
+      }
     } finally {
-      setIsLoading(false);
+      fetchInProgress.current = false;
+      if (mounted.current) {
+        setIsLoading(false);
+      }
     }
   }, []);
 
   const clearProfile = useCallback(() => {
-    setProfile(null);
-    setError(null);
-    setIsLoading(false); 
+    if (mounted.current) {
+      setProfile(null);
+      setError(null);
+      setIsLoading(false);
+    }
+    fetchInProgress.current = false;
   }, []);
 
+  // Initial fetch
   useEffect(() => {
-    if (fetchOnMount) {
+    if (fetchOnMount && mounted.current) {
       fetchProfile();
     }
+
+    return () => {
+      mounted.current = false;
+    };
   }, [fetchProfile, fetchOnMount]);
 
   const isAuthenticated = !!profile && Object.keys(profile).length > 0;

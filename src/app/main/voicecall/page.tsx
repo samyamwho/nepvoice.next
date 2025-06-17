@@ -111,7 +111,7 @@ const Audiocall: React.FC = () => {
   };
 
   return (
-    <div className="flex min-h-screen font-[Avenir] bg-gray-50 overflow-hidden">
+    <div className="flex min-h-screen bg-gray-50 overflow-hidden">
       <ToastContainer
         position="top-right"
         autoClose={3000}

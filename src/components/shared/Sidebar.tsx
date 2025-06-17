@@ -90,7 +90,7 @@ const Sidebar = () => {
 
       {/* Sidebar */}
       <div
-        className={`flex flex-col font-[Avenir] z-[9999] bg-white text-black border-r border-gray-300 transition-all duration-300 
+        className={`flex flex-col z-[9999] bg-white text-black border-r border-gray-300 transition-all duration-300 
         ${mobileOpen ? "fixed inset-0 w-full h-screen pt-16" : "hidden md:flex"} 
         ${!mobileOpen && collapsed ? "w-16" : "w-64"}`}
       >

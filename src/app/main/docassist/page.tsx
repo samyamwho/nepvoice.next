@@ -170,6 +170,7 @@ export default function DocAssist() {
           'Accept': 'application/json'
         },
         credentials: 'include',
+        redirect: 'manual'
       });
 
       if (!response.ok) {
@@ -473,9 +474,6 @@ export default function DocAssist() {
   return (
     <>
       <div className="flex h-screen bg-white">
-        {/* {!showPDFViewer && <Sidebar onShowDashboard={() => setShowDashboard(true)} />} Sidebar component removed */}
-
-        {/* The main content area will now take the full width if Sidebar is removed */}
         <div className={`flex-1 flex flex-col relative h-full ${showPDFViewer ? 'w-full' : ''}`}>
           <div className="flex-1 flex flex-col h-full overflow-hidden relative">
             <div className="flex flex-1 h-full overflow-hidden">
@@ -528,8 +526,7 @@ export default function DocAssist() {
                           </div>
                           <p className="text-black font-medium text-base md:text-lg">How may I assist you with your documents today?</p>
                           <p className="text-gray-500 text-sm md:text-base">Upload PDFs and ask questions about their content.</p>
-                          {/* Button to open dashboard if needed, or integrate into another UI element */}
-                          {/* <button onClick={() => setShowDashboard(true)}>Show Dashboard</button> */}
+
                         </div>
                       </div>
                     ) : (

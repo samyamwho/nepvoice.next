@@ -69,8 +69,8 @@ const LoginFormContent = () => {
           <Image
             src="/assets/NepVoice.png"
             alt="logo"
-            width={150}
-            height={50}
+            width={300}
+            height={120}
             priority
           />
         </Link>
