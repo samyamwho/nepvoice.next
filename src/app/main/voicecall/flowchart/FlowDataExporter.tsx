@@ -128,7 +128,7 @@ const FlowDataExporter: React.FC<FlowDataExporterProps> = ({
   const handleLoadExampleFlow = useCallback(() => {
     const exampleNodes: FlowNode[] = [
       { id: 'node_100', type: 'start', data: { label: 'Example Start' }, position: { x: 150, y: 50 } },
-      { id: 'node_101', type: 'default', data: { label: 'Process Step A' }, position: { x: 150, y: 200 } },
+      { id: 'node_101', type: 'default', data: { label: 'Process Step A' }, position: { x: 70, y: 200 } },
       { id: 'node_102', type: 'default', data: { label: 'Process Step B' }, position: { x: 350, y: 200 } },
       { id: 'node_103', type: 'end', data: { label: 'Example End' }, position: { x: 250, y: 350 } },
     ];
